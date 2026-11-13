@@ -1,0 +1,2644 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>畫圈計加數大冒險 (K3 幼兒數學)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Rounded Cute Traditional Chinese Font Support -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        cute: ['"Fredoka"', '"Noto Sans TC"', 'sans-serif'],
+                    },
+                    colors: {
+                        pastel: {
+                            bg: '#FFFDF7',
+                            pink: '#FF8FB1',
+                            pinkLight: '#FFE5EC',
+                            blue: '#6EC1E4',
+                            blueLight: '#E3F6FF',
+                            yellow: '#FFD166',
+                            yellowLight: '#FFF5D6',
+                            green: '#52B788',
+                            greenLight: '#D8F3DC',
+                            purple: '#B388EB',
+                            purpleLight: '#F3E8FF',
+                            orange: '#FF9F1C',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+        }
+        html, body {
+            overscroll-behavior: none;
+            touch-action: manipulation;
+        }
+        body {
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+            background-color: #FFF9F2;
+            background-image: 
+                radial-gradient(#FFE5EC 2px, transparent 2px), 
+                radial-gradient(#E3F6FF 2px, #FFF9F2 2px);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+            overflow-x: hidden;
+            min-height: 100dvh;
+        }
+
+        /* Cute Bubble Button Styling */
+        .btn-cute {
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
+            position: relative;
+            top: 0;
+        }
+        .btn-cute:active {
+            top: 4px;
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-cute-sm {
+            transition: all 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.15);
+            position: relative;
+            top: 0;
+        }
+        .btn-cute-sm:active {
+            top: 3px;
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15);
+        }
+
+        /* Drawing Canvas Styling */
+        .draw-canvas {
+            touch-action: none;
+            cursor: crosshair;
+            background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+            background-size: 14px 14px;
+        }
+
+        /* Animations */
+        @keyframes bounceIn {
+            0% { transform: scale(0.4); opacity: 0; }
+            60% { transform: scale(1.1); opacity: 1; }
+            80% { transform: scale(0.95); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-bounce-in {
+            animation: bounceIn 0.4s ease-out forwards;
+        }
+
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+        .animate-float {
+            animation: floatSlow 3s ease-in-out infinite;
+        }
+
+        @keyframes shakeError {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+        .animate-shake {
+            animation: shakeError 0.4s ease-in-out;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 143, 177, 0.5); }
+            50% { box-shadow: 0 0 0 10px rgba(255, 143, 177, 0); }
+        }
+        .pulse-glow {
+            animation: pulseGlow 2s infinite;
+        }
+
+        /* Monster & Attack Animations */
+        @keyframes monsterHit {
+            0%, 100% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+            20% { transform: scale(0.82) rotate(-12deg); filter: brightness(2) saturate(2) hue-rotate(-30deg); }
+            40% { transform: scale(1.12) rotate(10deg); }
+            60% { transform: scale(0.9) rotate(-8deg); }
+            80% { transform: scale(1.05) rotate(4deg); }
+        }
+        .animate-monster-hit {
+            animation: monsterHit 0.55s ease-in-out;
+        }
+
+        @keyframes projectileFly {
+            0% { transform: translateY(120px) scale(0.4); opacity: 1; }
+            70% { transform: translateY(-10px) scale(1.3); opacity: 1; }
+            100% { transform: translateY(-30px) scale(1.8); opacity: 0; }
+        }
+        .animate-projectile {
+            animation: projectileFly 0.45s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+        }
+
+        @keyframes damagePop {
+            0% { transform: translateY(0) scale(0.5); opacity: 1; }
+            40% { transform: translateY(-38px) scale(1.35); opacity: 1; }
+            100% { transform: translateY(-75px) scale(1); opacity: 0; }
+        }
+        .animate-damage {
+            animation: damagePop 0.95s ease-out forwards;
+        }
+
+        @keyframes screenFlashHit {
+            0%, 100% { background-color: transparent; }
+            30% { background-color: rgba(251, 191, 36, 0.35); }
+            60% { background-color: rgba(244, 63, 94, 0.25); }
+        }
+        .animate-arena-flash {
+            animation: screenFlashHit 0.45s ease-out;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #FFF5D6;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #FF8FB1;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-slate-700">
+
+    <!-- ================= TOP NAVIGATION BAR ================= -->
+    <header class="bg-white/95 backdrop-blur-md border-b-4 border-pink-200 px-3 sm:px-6 py-2.5 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+        <div class="flex items-center gap-2 sm:gap-3 cursor-pointer" onclick="app.confirmGoHome()">
+            <div class="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-pink-400 to-amber-300 flex items-center justify-center text-white text-2xl sm:text-3xl shadow-md">
+                🎨
+            </div>
+            <div>
+                <h1 class="text-xl sm:text-3xl font-black tracking-wide text-pink-600">
+                    畫圈計加數大冒險
+                </h1>
+                <p class="text-xs sm:text-sm text-slate-600 font-bold hidden sm:block">
+                    K3 幼兒趣味數學 • 第1步先點圈圈，第2步再選答案
+                </p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-3">
+            <!-- Dual Mode Segmented Selector: 1. 點圈模式 | 2. 畫圈模式 -->
+            <div class="bg-amber-50 p-1.5 rounded-2xl border-2 border-amber-400 flex items-center gap-1.5 shadow-sm">
+                <button id="nav-mode-tap" onclick="app.setBrushMode(true)" class="px-3 sm:px-4 py-2 rounded-xl text-sm sm:text-base font-black transition-all flex items-center gap-1.5 bg-amber-500 text-white shadow">
+                    <span>⭕</span>
+                    <span>點圈模式</span>
+                </button>
+                <button id="nav-mode-draw" onclick="app.setBrushMode(false)" class="px-3 sm:px-4 py-2 rounded-xl text-sm sm:text-base font-black transition-all flex items-center gap-1.5 text-amber-900 hover:bg-amber-100">
+                    <span>🖍️</span>
+                    <span>畫圈模式</span>
+                </button>
+            </div>
+
+            <!-- Sound Toggle -->
+            <button id="btn-sound" onclick="soundFX.toggleMute()" class="btn-cute-sm bg-sky-100 hover:bg-sky-200 text-sky-700 border-2 border-sky-300 w-11 h-11 rounded-2xl flex items-center justify-center text-xl" title="音效開關">
+                <i id="sound-icon" class="fa-solid fa-volume-high"></i>
+            </button>
+
+            <!-- Interactive Whiteboard / iPad Fullscreen Toggle -->
+            <button id="btn-fullscreen" onclick="app.toggleFullscreen()" class="btn-cute-sm bg-purple-100 hover:bg-purple-200 text-purple-700 border-2 border-purple-300 px-3 sm:px-4 h-11 rounded-2xl flex items-center justify-center gap-1.5 text-sm sm:text-base font-black" title="全螢幕模式（適合電子白板與iPad）">
+                <i id="fullscreen-icon" class="fa-solid fa-expand"></i>
+                <span class="hidden md:inline">全螢幕</span>
+            </button>
+
+            <!-- Home Button -->
+            <button id="btn-nav-home" onclick="app.confirmGoHome()" class="hidden btn-cute-sm bg-pink-100 hover:bg-pink-200 text-pink-700 border-2 border-pink-300 px-4 h-11 rounded-2xl text-sm sm:text-base font-black flex items-center gap-1.5">
+                <i class="fa-solid fa-house"></i>
+                <span class="hidden sm:inline">返回主頁</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ================= MAIN CONTENT CONTAINER ================= -->
+    <main class="flex-1 flex flex-col justify-center items-center p-2 sm:p-3 max-w-[1600px] w-full mx-auto">
+
+        <!-- 1. HOME MENU SCREEN -->
+        <section id="screen-home" class="w-full max-w-5xl my-auto py-4 animate-bounce-in">
+            <!-- Hero Banner -->
+            <div class="bg-white rounded-3xl p-6 sm:p-8 border-4 border-pink-300 shadow-xl text-center relative overflow-hidden mb-6">
+                <div class="absolute -top-6 -left-6 text-6xl opacity-20 rotate-12">🍓</div>
+                <div class="absolute -bottom-6 -right-6 text-6xl opacity-20 -rotate-12">🐥</div>
+
+                <div class="inline-flex items-center gap-2 bg-amber-100 text-amber-800 px-5 py-1.5 rounded-full text-sm sm:text-base font-black mb-3 border-2 border-amber-300">
+                    <span>🌟 K3 小朋友專屬互動算術樂園 🌟</span>
+                </div>
+
+                <h2 class="text-3xl sm:text-5xl font-black text-slate-800 mb-3 leading-tight">
+                    第1步<span class="text-amber-500 underline decoration-wavy decoration-pink-400">先點圈圈</span>，第2步<span class="text-emerald-600">再選答案</span>！
+                </h2>
+                <p class="text-base sm:text-xl text-slate-600 max-w-3xl mx-auto font-bold">
+                    題目自動顯示 <span class="inline-block bg-pink-100 text-pink-600 font-black px-2.5 py-0.5 rounded-lg">+</span> 和 <span class="inline-block bg-sky-100 text-sky-600 font-black px-2.5 py-0.5 rounded-lg">=</span>，小朋友先在空格點出或畫出圈圈數量，數一數後再點選正確答案！
+                </p>
+
+                <!-- Choose Circle Mode Banner on Home Screen -->
+                <div class="mt-6 max-w-2xl mx-auto bg-amber-50 rounded-3xl p-4 sm:p-5 border-3 border-amber-300">
+                    <div class="text-base sm:text-lg font-black text-amber-900 mb-3">
+                        👇 請選擇作答方式（遊戲中隨時可在頂部切換）：
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button id="home-mode-tap" onclick="app.setBrushMode(true)" class="btn-cute-sm p-4 rounded-2xl border-4 flex flex-col items-center justify-center gap-1.5 bg-amber-500 text-white border-amber-600 shadow-md">
+                            <span class="text-2xl sm:text-4xl font-black">⭕ 點圈模式</span>
+                            <span class="text-xs sm:text-base font-bold">手指輕點一下即出大圓圈（推薦）</span>
+                        </button>
+                        <button id="home-mode-draw" onclick="app.setBrushMode(false)" class="btn-cute-sm p-4 rounded-2xl border-4 flex flex-col items-center justify-center gap-1.5 bg-white text-slate-700 border-pink-300 hover:bg-pink-50">
+                            <span class="text-2xl sm:text-4xl font-black">🖍️ 畫圈模式</span>
+                            <span class="text-xs sm:text-base font-bold">小手在超大畫布自己畫圈圈</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mode Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Solo Practice Card -->
+                <div class="bg-white rounded-3xl p-6 border-4 border-sky-200 shadow-lg flex flex-col justify-between hover:border-sky-400 transition-all">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="bg-sky-100 text-sky-700 font-black px-3.5 py-1 rounded-full text-sm border border-sky-200">
+                                👾 模式一：打怪獸大冒險
+                            </span>
+                            <span class="text-3xl animate-float">⚔️</span>
+                        </div>
+                        <h3 class="text-2xl font-black text-slate-800 mb-2">個人打怪獸攻略模式</h3>
+                        <ul class="space-y-2 text-sm text-slate-600 font-medium mb-6">
+                            <li class="flex items-center gap-2">
+                                <span class="text-sky-500">✔</span>
+                                <span><strong>第1步先畫圈，第2步再回答</strong>（可<strong>手寫數字</strong>或<strong>點選答案</strong>）</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <span class="text-pink-500">✔</span>
+                                <span>每答對 1 題<strong>得 1 分並扣怪獸 1 點血 (-1 HP)</strong>，附酷炫攻擊動畫！</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <span class="text-amber-500">✔</span>
+                                <span><strong>30分</strong>完成攻略、<strong>50分</strong>隱藏獎勵、<strong>70分</strong>神秘款、<strong>100分</strong>VIP傳說款！</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <span class="text-emerald-500">✔</span>
+                                <span>答錯自動彈出<strong>數數圖片提示</strong>＋詳盡<strong>錯題成績表</strong></span>
+                            </li>
+                        </ul>
+                    </div>
+                    <button onclick="app.startSoloMode()" class="btn-cute w-full bg-gradient-to-r from-sky-400 to-blue-500 hover:from-sky-500 hover:to-blue-600 text-white font-black text-xl py-4 rounded-2xl flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-khanda"></i>
+                        <span>開始打怪獸冒險</span>
+                    </button>
+                </div>
+
+                <!-- Battle Mode Card -->
+                <div class="bg-white rounded-3xl p-6 border-4 border-pink-200 shadow-lg flex flex-col justify-between hover:border-pink-400 transition-all">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="bg-pink-100 text-pink-700 font-black px-3.5 py-1 rounded-full text-sm border border-pink-200">
+                                🦁 模式二
+                            </span>
+                            <span class="text-3xl animate-float">🏆</span>
+                        </div>
+                        <h3 class="text-2xl font-black text-slate-800 mb-2">雙人 / 四人對戰模式</h3>
+                        <ul class="space-y-2 text-sm text-slate-600 font-medium mb-6">
+                            <li class="flex items-center gap-2">
+                                <span class="text-pink-500">✔</span>
+                                <span>限時 <strong>1 分鐘</strong>，每人基本 <strong>10 題</strong></span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <span class="text-amber-500">✔</span>
+                                <span><strong>提早完成 10 題</strong>，自動生成<strong>數字鍵盤挑戰題</strong>繼續搶分！</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <span class="text-purple-500">✔</span>
+                                <span>各自獨立畫圈區、即時圖片提示與賽後<strong>錯題回饋成績表</strong></span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="app.startBattleMode(2)" class="btn-cute bg-gradient-to-r from-pink-400 to-rose-500 hover:from-pink-500 hover:to-rose-600 text-white font-black text-lg py-4 rounded-2xl flex flex-col items-center justify-center">
+                            <span>👫 2人對戰</span>
+                            <span class="text-xs font-medium opacity-90">左右分屏</span>
+                        </button>
+                        <button onclick="app.startBattleMode(4)" class="btn-cute bg-gradient-to-r from-purple-400 to-indigo-500 hover:from-purple-500 hover:to-indigo-600 text-white font-black text-lg py-4 rounded-2xl flex flex-col items-center justify-center">
+                            <span>👨‍👩‍👧‍👦 4人對戰</span>
+                            <span class="text-xs font-medium opacity-90">四格同屏</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. SOLO PRACTICE SCREEN (Optimized for iPad & Smartboard Single-Screen Fit) -->
+        <section id="screen-solo" class="hidden w-full max-w-[1520px] flex flex-col gap-2.5">
+            <!-- Monster Battle Arena Header -->
+            <div id="monster-arena-box" class="bg-gradient-to-r from-indigo-900 via-purple-900 to-pink-900 text-white rounded-3xl px-4 py-2.5 sm:px-5 sm:py-3 border-4 border-amber-400 shadow-xl relative overflow-hidden transition-colors">
+                <!-- Projectile & Floating Damage Layer -->
+                <div id="monster-fx-layer" class="pointer-events-none absolute inset-0 flex items-center justify-center z-30"></div>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 items-center gap-2 sm:gap-3 relative z-10">
+                    <!-- Left: Score & Question Info -->
+                    <div class="md:col-span-4 flex flex-wrap items-center justify-between md:justify-start gap-2">
+                        <div class="bg-white/15 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border-2 border-white/25">
+                            <span class="text-xs font-bold text-amber-200 block">目前題號</span>
+                            <span class="text-base sm:text-xl font-black">第 <span id="solo-q-num" class="text-amber-300">1</span> 題</span>
+                        </div>
+                        <div class="bg-amber-400 text-slate-900 px-3.5 py-1.5 rounded-2xl border-2 border-white shadow-md flex items-center gap-2">
+                            <span class="text-xl sm:text-2xl">⚔️</span>
+                            <div>
+                                <span class="text-[11px] font-black block leading-none">攻略積分 (1題=1分)</span>
+                                <span id="solo-score" class="text-xl sm:text-2xl font-black">0</span> <span class="text-xs font-black">分</span>
+                            </div>
+                        </div>
+                        <div id="solo-mode-badge" class="hidden"></div>
+                    </div>
+
+                    <!-- Center: Animated Monster Stage -->
+                    <div class="md:col-span-4 flex flex-col items-center justify-center">
+                        <div class="flex items-center gap-3">
+                            <div id="monster-avatar-wrap" class="relative w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-white/15 border-4 border-amber-300 flex items-center justify-center shadow-lg">
+                                <span id="monster-emoji" class="text-4xl sm:text-5xl animate-float select-none">👾</span>
+                                <span id="monster-tier-tag" class="absolute -top-2 -right-2 bg-rose-500 text-white text-[11px] font-black px-2 py-0.5 rounded-full border-2 border-white shadow">
+                                    Lv.1
+                                </span>
+                            </div>
+                            <div class="text-left">
+                                <div class="flex items-center gap-2">
+                                    <h3 id="monster-name" class="text-base sm:text-xl font-black text-amber-300">果凍小怪獸</h3>
+                                </div>
+                                <div class="text-xs font-bold text-pink-200 mb-1">
+                                    <span id="monster-hp-label">距離完成攻略還差 30 HP</span>
+                                </div>
+                                <!-- Monster HP Bar -->
+                                <div class="w-40 sm:w-52 h-4 bg-slate-950/80 rounded-full overflow-hidden border-2 border-white/40 p-0.5">
+                                    <div id="monster-hp-bar" class="h-full bg-gradient-to-r from-rose-500 via-orange-400 to-emerald-400 rounded-full transition-all duration-300" style="width: 100%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Reward Collection Bar (30 / 50 / 70 / 100) + Report Button -->
+                    <div class="md:col-span-4 flex items-center justify-between md:justify-end gap-2">
+                        <div class="flex-1 max-w-xs bg-white/10 rounded-2xl p-1.5 border border-white/20">
+                            <div class="flex justify-between items-center text-[10px] sm:text-xs font-black text-amber-200 mb-1 px-1">
+                                <span>🎁 寶箱進度</span>
+                                <span id="solo-progress-text">0 / 100 分</span>
+                            </div>
+                            <div class="grid grid-cols-4 gap-1 text-center">
+                                <div id="badge-30" class="bg-slate-800/80 border border-slate-500 rounded-xl py-0.5 px-1 opacity-60 transition-all">
+                                    <div class="text-sm sm:text-base">🛡️</div>
+                                    <div class="text-[9px] font-black">30分</div>
+                                </div>
+                                <div id="badge-50" class="bg-slate-800/80 border border-slate-500 rounded-xl py-0.5 px-1 opacity-60 transition-all">
+                                    <div class="text-sm sm:text-base">🎁</div>
+                                    <div class="text-[9px] font-black">50分</div>
+                                </div>
+                                <div id="badge-70" class="bg-slate-800/80 border border-slate-500 rounded-xl py-0.5 px-1 opacity-60 transition-all">
+                                    <div class="text-sm sm:text-base">🔮</div>
+                                    <div class="text-[9px] font-black">70分</div>
+                                </div>
+                                <div id="badge-100" class="bg-slate-800/80 border border-slate-500 rounded-xl py-0.5 px-1 opacity-60 transition-all">
+                                    <div class="text-sm sm:text-base">👑</div>
+                                    <div class="text-[9px] font-black">100分</div>
+                                </div>
+                            </div>
+                            <div id="solo-progress-bar" class="hidden"></div>
+                        </div>
+
+                        <button onclick="app.finishSoloAndShowReport()" class="btn-cute-sm bg-rose-500 hover:bg-rose-600 text-white font-black px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm flex flex-col items-center justify-center shrink-0">
+                            <i class="fa-solid fa-clipboard-check text-base"></i>
+                            <span>成績表</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Solo Main Question Card (Fits iPad Landscape & Smartboard without scrolling) -->
+            <div class="bg-white rounded-3xl p-3 sm:p-5 border-4 border-pink-300 shadow-lg relative">
+                <!-- Question Equation with Pure Large Numbers -->
+                <div class="text-center mb-2.5">
+                    <div class="flex items-center justify-center gap-3 sm:gap-6">
+                        <!-- Addend A Box -->
+                        <div class="bg-pink-50 border-4 border-pink-300 rounded-3xl px-6 py-1.5 sm:px-9 sm:py-2.5 min-w-[85px] sm:min-w-[135px] flex flex-col items-center justify-center shadow-sm">
+                            <span id="solo-num-a" class="text-4xl sm:text-6xl font-black text-pink-600 leading-none">2</span>
+                        </div>
+
+                        <span class="text-3xl sm:text-5xl font-black text-amber-500">+</span>
+
+                        <!-- Addend B Box -->
+                        <div class="bg-sky-50 border-4 border-sky-300 rounded-3xl px-6 py-1.5 sm:px-9 sm:py-2.5 min-w-[85px] sm:min-w-[135px] flex flex-col items-center justify-center shadow-sm">
+                            <span id="solo-num-b" class="text-4xl sm:text-6xl font-black text-sky-600 leading-none">3</span>
+                        </div>
+
+                        <span class="text-3xl sm:text-5xl font-black text-amber-500">=</span>
+
+                        <!-- Target Question Mark Box -->
+                        <div class="bg-emerald-50 border-4 border-emerald-400 rounded-3xl px-5 py-1.5 sm:px-8 sm:py-2 min-w-[85px] sm:min-w-[135px] flex flex-col items-center justify-center shadow-sm">
+                            <span id="solo-num-ans-preview" class="text-3xl sm:text-5xl font-black text-emerald-600 leading-none">?</span>
+                            <span class="text-xs sm:text-sm font-black text-emerald-700 mt-0.5">合共多少</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 1: THREE HORIZONTAL DRAWING BOXES (Stays side-by-side on iPad & Smartboard!) -->
+                <div id="solo-step1-box" class="bg-amber-50/90 rounded-3xl p-3 sm:p-4 border-4 border-amber-300 transition-all">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-2 px-1">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="bg-amber-500 text-white font-black px-3.5 py-1 rounded-xl text-sm sm:text-lg shadow-sm">
+                                👆 第 1 步：先在空格畫圈 / 點圈
+                            </span>
+                            <span id="solo-draw-label-badge" class="bg-amber-500 text-white font-black px-3 py-1 rounded-xl text-xs sm:text-base">
+                                ⭕ 點圈模式
+                            </span>
+                            <span class="font-black text-slate-700 text-sm sm:text-lg">
+                                （<span id="solo-instruction-text">點2個圈 + 點3個圈 = 點5個圈</span>）
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="app.autoFillTotalCircles('solo')" class="btn-cute-sm bg-emerald-500 hover:bg-emerald-600 text-white border-2 border-emerald-600 px-3.5 py-1.5 rounded-xl text-xs sm:text-base font-black flex items-center gap-1.5">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                <span>合併圈圈到右邊</span>
+                            </button>
+                            <button onclick="app.clearAllCanvases('solo')" class="btn-cute-sm bg-rose-100 hover:bg-rose-200 text-rose-700 border-2 border-rose-300 px-3.5 py-1.5 rounded-xl text-xs sm:text-base font-black flex items-center gap-1.5">
+                                <i class="fa-solid fa-eraser"></i>
+                                <span>全部清除</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Side-by-side 11-column layout on iPad (sm/md) and Smartboards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-11 items-center gap-2">
+                        <!-- Canvas 1 (Addend A) -->
+                        <div class="sm:col-span-3 flex flex-col items-center w-full">
+                            <div class="w-full flex items-center justify-between px-2 mb-1">
+                                <span class="text-sm sm:text-lg font-black text-pink-600">第 1 組圈圈</span>
+                                <span id="solo-count-a" class="bg-pink-500 text-white text-xs sm:text-base font-black px-3 py-0.5 rounded-full">0 個圈</span>
+                            </div>
+                            <div class="relative w-full h-48 sm:h-56 lg:h-64 bg-white rounded-3xl border-4 border-pink-400 shadow-inner overflow-hidden">
+                                <canvas id="solo-canvas-a" class="draw-canvas w-full h-full block"></canvas>
+                                <button onclick="app.clearSingleCanvas('solo', 'a')" class="absolute bottom-2 right-2 bg-pink-100 hover:bg-pink-200 text-pink-800 text-xs sm:text-sm font-black px-3 py-1.5 rounded-xl border-2 border-pink-300 shadow">
+                                    重畫
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Automatic PLUS Sign -->
+                        <div class="sm:col-span-1 flex items-center justify-center py-0.5 sm:py-0">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-amber-400 text-white font-black text-2xl sm:text-3xl flex items-center justify-center shadow-md">
+                                +
+                            </div>
+                        </div>
+
+                        <!-- Canvas 2 (Addend B) -->
+                        <div class="sm:col-span-3 flex flex-col items-center w-full">
+                            <div class="w-full flex items-center justify-between px-2 mb-1">
+                                <span class="text-sm sm:text-lg font-black text-sky-600">第 2 組圈圈</span>
+                                <span id="solo-count-b" class="bg-sky-500 text-white text-xs sm:text-base font-black px-3 py-0.5 rounded-full">0 個圈</span>
+                            </div>
+                            <div class="relative w-full h-48 sm:h-56 lg:h-64 bg-white rounded-3xl border-4 border-sky-400 shadow-inner overflow-hidden">
+                                <canvas id="solo-canvas-b" class="draw-canvas w-full h-full block"></canvas>
+                                <button onclick="app.clearSingleCanvas('solo', 'b')" class="absolute bottom-2 right-2 bg-sky-100 hover:bg-sky-200 text-sky-800 text-xs sm:text-sm font-black px-3 py-1.5 rounded-xl border-2 border-sky-300 shadow">
+                                    重畫
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Automatic EQUALS Sign -->
+                        <div class="sm:col-span-1 flex items-center justify-center py-0.5 sm:py-0">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-emerald-500 text-white font-black text-2xl sm:text-3xl flex items-center justify-center shadow-md">
+                                =
+                            </div>
+                        </div>
+
+                        <!-- Canvas 3 (Total Sum Circles) -->
+                        <div class="sm:col-span-3 flex flex-col items-center w-full">
+                            <div class="w-full flex items-center justify-between px-2 mb-1">
+                                <span class="text-sm sm:text-lg font-black text-emerald-700">總共圈圈</span>
+                                <span id="solo-count-c" class="bg-emerald-500 text-white text-xs sm:text-base font-black px-3 py-0.5 rounded-full">0 個圈</span>
+                            </div>
+                            <div class="relative w-full h-48 sm:h-56 lg:h-64 bg-white rounded-3xl border-4 border-emerald-400 shadow-inner overflow-hidden">
+                                <canvas id="solo-canvas-c" class="draw-canvas w-full h-full block"></canvas>
+                                <button onclick="app.clearSingleCanvas('solo', 'c')" class="absolute bottom-2 right-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-xs sm:text-sm font-black px-3 py-1.5 rounded-xl border-2 border-emerald-300 shadow">
+                                    重畫
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 2: ANSWER AREA (Locked until circles are drawn/tapped) -->
+                <div id="solo-step2-box" class="mt-3 bg-emerald-50/70 rounded-3xl p-3.5 sm:p-4 border-4 border-emerald-300 relative transition-all overflow-hidden">
+                    <!-- Step 2 Lock Shield Overlay (Prevents clicking/writing before drawing circles in Step 1) -->
+                    <div id="solo-step2-lock-overlay" onclick="app.remindDrawCirclesFirst()" class="absolute inset-0 bg-slate-900/45 backdrop-blur-[2px] z-20 flex items-center justify-center p-4 cursor-pointer transition-opacity duration-300">
+                        <div class="bg-white border-4 border-amber-400 rounded-3xl px-6 py-4 shadow-xl flex items-center gap-3 max-w-lg text-center animate-bounce-in">
+                            <span class="text-4xl sm:text-5xl">🔒</span>
+                            <div class="text-left">
+                                <div class="text-base sm:text-xl font-black text-rose-600">第 2 步尚未解鎖！</div>
+                                <div class="text-xs sm:text-base font-bold text-slate-600">請先在上方「第 1 步」三個空格畫出或點出圈圈，就會自動解鎖寫/選答案喔！👆</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 Header Banner & Answer Method Switcher (Write vs Tap) -->
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                        <span id="solo-step2-badge" class="bg-slate-400 text-white font-black px-4 py-1.5 rounded-xl text-sm sm:text-lg shadow-sm transition-all">
+                            🔒 第 2 步：請先在上面空格畫出圈圈，再寫/選答案！
+                        </span>
+
+                        <!-- Answer Input Mode Tabs: 點選答案 | 手寫答案 | 鍵盤輸入 -->
+                        <div class="bg-white p-1.5 rounded-2xl border-2 border-emerald-400 flex items-center gap-1 shadow-sm">
+                            <button id="ans-tab-mc" onclick="app.setSoloAnswerMethod('mc')" class="px-3 py-1.5 rounded-xl text-xs sm:text-base font-black transition-all bg-emerald-500 text-white shadow">
+                                👆 點選答案
+                            </button>
+                            <button id="ans-tab-write" onclick="app.setSoloAnswerMethod('write')" class="px-3 py-1.5 rounded-xl text-xs sm:text-base font-black transition-all text-emerald-800 hover:bg-emerald-100">
+                                ✍️ 手寫答案
+                            </button>
+                            <button id="ans-tab-keypad" onclick="app.setSoloAnswerMethod('keypad')" class="px-3 py-1.5 rounded-xl text-xs sm:text-base font-black transition-all text-emerald-800 hover:bg-emerald-100">
+                                🔢 數字鍵盤
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Option A: 3 Multiple Choice Options (點答案) -->
+                    <div id="solo-mc-container">
+                        <div id="solo-mc-buttons" class="grid grid-cols-3 gap-4 sm:gap-8 max-w-2xl mx-auto">
+                            <!-- Dynamically populated 3 choice buttons -->
+                        </div>
+                    </div>
+
+                    <!-- Option B: Handwriting Number Recognition Pad (寫答案) -->
+                    <div id="solo-write-container" class="hidden max-w-2xl mx-auto">
+                        <div class="bg-white rounded-3xl p-4 border-4 border-amber-400 shadow-inner flex flex-col sm:flex-row items-center gap-4">
+                            <div class="flex-1 w-full">
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <span class="text-sm sm:text-base font-black text-amber-800">
+                                        ✍️ 請在下面方格寫出數字答案 (1-10)：
+                                    </span>
+                                    <button onclick="app.clearHandwritingPad()" class="bg-rose-100 hover:bg-rose-200 text-rose-700 text-xs sm:text-sm font-black px-3 py-1 rounded-xl border border-rose-300">
+                                        擦掉重寫
+                                    </button>
+                                </div>
+                                <div class="relative w-full h-44 sm:h-48 bg-amber-50/60 rounded-2xl border-4 border-dashed border-amber-400 overflow-hidden">
+                                    <canvas id="solo-write-canvas" class="draw-canvas w-full h-full block"></canvas>
+                                    <div class="pointer-events-none absolute inset-0 flex items-center justify-center opacity-15 text-7xl font-black text-amber-400">
+                                        123
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Recognized Number Preview & Attack Confirm -->
+                            <div class="w-full sm:w-56 flex flex-col items-center justify-center gap-2 bg-amber-50 p-3.5 rounded-2xl border-2 border-amber-300">
+                                <span class="text-xs sm:text-sm font-black text-slate-600">系統辨識 / 微調數字：</span>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="app.adjustWrittenNumber(-1)" class="btn-cute-sm bg-white border-2 border-amber-300 w-9 h-9 rounded-xl font-black text-lg text-amber-700">-</button>
+                                    <div id="solo-written-preview" class="bg-white border-4 border-emerald-400 rounded-2xl px-5 py-2 text-4xl font-black text-emerald-600 min-w-[80px] text-center">
+                                        ?
+                                    </div>
+                                    <button onclick="app.adjustWrittenNumber(1)" class="btn-cute-sm bg-white border-2 border-amber-300 w-9 h-9 rounded-xl font-black text-lg text-amber-700">+</button>
+                                </div>
+                                <button onclick="app.submitWrittenAnswer()" class="btn-cute w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-black text-lg py-3 rounded-2xl flex items-center justify-center gap-1.5 mt-1">
+                                    <span>⚔️ 發射答案攻擊！</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Option C: Challenge Mode Self-Input Keypad -->
+                    <div id="solo-keypad-container" class="hidden max-w-xl mx-auto">
+                        <div class="flex items-center justify-between bg-purple-100 border-3 border-purple-300 rounded-2xl px-5 py-2.5 mb-3">
+                            <span class="text-sm sm:text-lg font-black text-purple-800">🔢 數字鍵盤：請輸入數字答案發動攻擊：</span>
+                            <div id="solo-keypad-display" class="bg-white border-3 border-purple-500 rounded-xl px-6 py-1 text-3xl sm:text-4xl font-black text-purple-700 min-w-[90px] text-center">
+                                ?
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-6 gap-2.5">
+                            <button onclick="app.pressSoloKeypad(1)" class="btn-cute-sm bg-white hover:bg-purple-50 border-2 border-purple-300 text-slate-800 font-black text-2xl py-3 rounded-2xl">1</button>
+                            <button onclick="app.pressSoloKeypad(2)" class="btn-cute-sm bg-white hover:bg-purple-50 border-2 border-purple-300 text-slate-800 font-black text-2xl py-3 rounded-2xl">2</button>
+                            <button onclick="app.pressSoloKeypad(3)" class="btn-cute-sm bg-white hover:bg-purple-50 border-2 border-purple-300 text-slate-800 font-black text-2xl py-3 rounded-2xl">3</button>
+                            <button onclick="app.pressSoloKeypad(4)" class="btn-cute-sm bg-white hover:bg-purple-50 border-2 border-purple-300 text-slate-800 font-black text-2xl py-3 rounded-2xl">4</button>
+                            <button onclick="app.pressSoloKeypad(5)" class="btn-cute-sm bg-white hover:bg-purple-50 border-2 border-purple-300 text-slate-800 font-black text-2xl py-3 rounded-2xl">5</button>
+                            <button onclick="app.pressSoloKeypad('clear')" class="btn-cute-sm bg-rose-100 hover:bg-rose-200 border-2 border-rose-300 text-rose-700 font-black text-base py-3 rounded-2xl">清除</button>
+
+                            <button onclick="app.pressSoloKeypad(6)" class="btn-cute-sm bg-white hover:bg-purple-50 border-2 border-purple-300 text-slate-800 font-black text-2xl py-3 rounded-2xl">6</button>
+                            <button onclick="app.pressSoloKeypad(7)" class="btn-cute-sm bg-white hover:bg-purple-50 border-2 border-purple-300 text-slate-800 font-black text-2xl py-3 rounded-2xl">7</button>
+                            <button onclick="app.pressSoloKeypad(8)" class="btn-cute-sm bg-white hover:bg-purple-50 border-2 border-purple-300 text-slate-800 font-black text-2xl py-3 rounded-2xl">8</button>
+                            <button onclick="app.pressSoloKeypad(9)" class="btn-cute-sm bg-white hover:bg-purple-50 border-2 border-purple-300 text-slate-800 font-black text-2xl py-3 rounded-2xl">9</button>
+                            <button onclick="app.pressSoloKeypad(0)" class="btn-cute-sm bg-white hover:bg-purple-50 border-2 border-purple-300 text-slate-800 font-black text-2xl py-3 rounded-2xl">0</button>
+                            <button onclick="app.pressSoloKeypad('submit')" class="btn-cute-sm bg-emerald-500 hover:bg-emerald-600 border-2 border-emerald-600 text-white font-black text-lg py-3 rounded-2xl">攻擊</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. MULTIPLAYER BATTLE SCREEN (2P / 4P) -->
+        <section id="screen-battle" class="hidden w-full flex-1 flex flex-col gap-2">
+            <!-- Battle Top Timer & Controls Bar -->
+            <div class="bg-white rounded-2xl px-4 py-2 border-4 border-pink-300 shadow-md flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span id="battle-title-badge" class="bg-pink-500 text-white font-black px-3 py-1 rounded-xl text-xs sm:text-sm">
+                        🏆 2人對戰模式
+                    </span>
+                    <span class="text-xs text-slate-500 font-bold hidden md:inline">
+                        完成 10 題自動進入「挑戰題（自己輸入數字）」！
+                    </span>
+                </div>
+
+                <!-- Central 60s Countdown Timer -->
+                <div class="flex items-center gap-2 bg-amber-100 border-2 border-amber-400 px-4 py-1 rounded-2xl">
+                    <i class="fa-solid fa-stopwatch text-amber-600 text-lg animate-bounce"></i>
+                    <span class="text-xs font-bold text-amber-800">倒數計時</span>
+                    <span id="battle-timer" class="text-2xl sm:text-3xl font-black text-rose-600 tabular-nums">60</span>
+                    <span class="text-xs font-bold text-amber-800">秒</span>
+                </div>
+
+                <button onclick="app.endBattleGame()" class="btn-cute-sm bg-rose-500 hover:bg-rose-600 text-white font-black px-3 py-1.5 rounded-xl text-xs sm:text-sm">
+                    提前結束並看成績
+                </button>
+            </div>
+
+            <!-- Dynamic Players Split-Screen Grid -->
+            <div id="battle-players-grid" class="grid gap-2.5 flex-1">
+                <!-- Populated dynamically for 2 or 4 players -->
+            </div>
+        </section>
+
+        <!-- 4. REPORT CARD & MISTAKE REVIEW SCREEN (成績表與錯題回饋) -->
+        <section id="screen-report" class="hidden w-full max-w-5xl my-auto py-3 animate-bounce-in">
+            <div class="bg-white rounded-3xl p-5 sm:p-8 border-4 border-amber-300 shadow-2xl">
+                <div class="text-center mb-6">
+                    <div class="inline-block text-5xl mb-2">🎉🏆🎉</div>
+                    <h2 id="report-title" class="text-2xl sm:text-4xl font-black text-slate-800">
+                        學習成績表與錯題回饋
+                    </h2>
+                    <p id="report-subtitle" class="text-sm text-slate-500 font-bold mt-1">
+                        小朋友表現得太棒了！一起來看看成績和溫習錯題吧！
+                    </p>
+                </div>
+
+                <!-- Summary Cards / Podium -->
+                <div id="report-summary-container" class="mb-6">
+                    <!-- Populated dynamically for Solo or Battle -->
+                </div>
+
+                <!-- Player Tabs (For Battle Mode Error Review) -->
+                <div id="report-player-tabs" class="hidden flex flex-wrap gap-2 justify-center mb-4"></div>
+
+                <!-- Mistake Review Section (錯題回饋) -->
+                <div class="bg-rose-50/70 rounded-3xl p-4 sm:p-6 border-2 border-rose-200">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg sm:text-xl font-black text-rose-700 flex items-center gap-2">
+                            <i class="fa-solid fa-book-open-reader"></i>
+                            <span>錯題回饋溫習冊（點擊或觀察圓圈數量）</span>
+                        </h3>
+                        <span id="report-mistake-count" class="bg-rose-200 text-rose-800 font-black px-3 py-1 rounded-full text-xs sm:text-sm">
+                            0 題需溫習
+                        </span>
+                    </div>
+
+                    <div id="report-mistakes-list" class="space-y-3 max-h-96 overflow-y-auto pr-1">
+                        <!-- Dynamically populated mistake breakdown cards -->
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="mt-6 flex flex-wrap items-center justify-center gap-4">
+                    <button onclick="app.replayCurrentMode()" class="btn-cute bg-gradient-to-r from-emerald-400 to-teal-500 text-white font-black text-lg px-8 py-3.5 rounded-2xl flex items-center gap-2">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        <span>再玩一次</span>
+                    </button>
+                    <button onclick="app.goHome()" class="btn-cute bg-gradient-to-r from-pink-400 to-rose-500 text-white font-black text-lg px-8 py-3.5 rounded-2xl flex items-center gap-2">
+                        <i class="fa-solid fa-house"></i>
+                        <span>返回主頁選單</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ================= SOLO VISUAL HINT POPUP ON ERROR (答錯自動彈出圖片提示) ================= -->
+    <div id="modal-solo-hint" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 border-4 border-amber-400 shadow-2xl text-center animate-bounce-in">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-100 text-4xl mb-2 border-2 border-amber-300">
+                💡
+            </div>
+            <h3 class="text-2xl font-black text-rose-500 mb-1">
+                哎呀！差一點點，我們一起數一數！
+            </h3>
+            <p class="text-sm text-slate-600 font-bold mb-4">
+                跟著下面的圖片和圈圈，由 1 數到最後一個吧：
+            </p>
+
+            <!-- Equation & Step-by-step Visual Counting Area -->
+            <div class="bg-amber-50 rounded-2xl p-4 border-2 border-amber-200 mb-5">
+                <div id="solo-hint-equation" class="text-3xl font-black text-slate-800 mb-3">
+                    2 + 3 = ?
+                </div>
+                <div id="solo-hint-visual-items" class="flex flex-wrap items-center justify-center gap-2 py-2">
+                    <!-- Populated with numbered cute items + circles -->
+                </div>
+                <p id="solo-hint-explanation" class="text-sm font-black text-emerald-700 mt-3 bg-emerald-100 py-1.5 px-3 rounded-xl inline-block">
+                    共有 5 個圈圈！
+                </p>
+            </div>
+
+            <button onclick="app.closeSoloHintModal()" class="btn-cute w-full bg-gradient-to-r from-amber-400 to-orange-500 text-white font-black text-xl py-3.5 rounded-2xl">
+                我數好了，再試一次！💪
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= MILESTONE CELEBRATION MODAL (30/50/70/100分打怪獸獎勵通知) ================= -->
+    <div id="modal-milestone" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 border-4 border-amber-400 shadow-2xl text-center animate-bounce-in">
+            <div id="milestone-icon" class="text-7xl mb-3 animate-float">🏆</div>
+            <span id="milestone-tag" class="bg-amber-100 text-amber-800 font-black px-4 py-1 rounded-full text-sm border-2 border-amber-300 inline-block mb-2">
+                🎉 解鎖全新成就！
+            </span>
+            <h3 id="milestone-title" class="text-2xl sm:text-3xl font-black text-purple-600 mb-2">
+                太厲害了！達成 30 分完成攻略！
+            </h3>
+            <p id="milestone-desc" class="text-slate-600 font-bold text-sm sm:text-base mb-5 leading-relaxed">
+                你成功擊退了第一階段怪獸！繼續挑戰 50 分解鎖隱藏獎勵吧！
+            </p>
+            <button onclick="app.closeMilestoneModal()" class="btn-cute w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-black text-xl py-3.5 rounded-2xl">
+                繼續打怪獸大冒險！⚔️
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= FLOATING FEEDBACK OVERLAY (✅ / ❌) ================= -->
+    <div id="feedback-overlay" class="fixed inset-0 pointer-events-none z-50 hidden items-center justify-center">
+        <div id="feedback-badge" class="bg-white/95 border-4 rounded-3xl px-8 py-6 shadow-2xl flex flex-col items-center animate-bounce-in">
+            <span id="feedback-emoji" class="text-7xl mb-2">✅</span>
+            <span id="feedback-text" class="text-2xl font-black text-emerald-600">答對了！好棒！</span>
+        </div>
+    </div>
+
+    <!-- ================= APPLICATION LOGIC ================= -->
+    <script>
+        /**
+         * Web Audio API Sound Effects Synthesizer (No external audio files needed)
+         */
+        class SoundEffects {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            toggleMute() {
+                this.muted = !this.muted;
+                const icon = document.getElementById('sound-icon');
+                const btn = document.getElementById('btn-sound');
+                if (this.muted) {
+                    icon.className = 'fa-solid fa-volume-xmark';
+                    btn.classList.replace('text-sky-700', 'text-slate-400');
+                } else {
+                    icon.className = 'fa-solid fa-volume-high';
+                    btn.classList.replace('text-slate-400', 'text-sky-700');
+                    this.playPop();
+                }
+            }
+
+            playPop() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(520, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.08);
+
+                gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.09);
+            }
+
+            playCorrect() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    const startTime = this.ctx.currentTime + idx * 0.08;
+                    osc.frequency.setValueAtTime(freq, startTime);
+
+                    gain.gain.setValueAtTime(0.22, startTime);
+                    gain.gain.exponentialRampToValueAtTime(0.008, startTime + 0.22);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(startTime);
+                    osc.stop(startTime + 0.24);
+                });
+            }
+
+            playWrong() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const notes = [300, 240];
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    const startTime = this.ctx.currentTime + idx * 0.14;
+                    osc.frequency.setValueAtTime(freq, startTime);
+
+                    gain.gain.setValueAtTime(0.15, startTime);
+                    gain.gain.exponentialRampToValueAtTime(0.008, startTime + 0.18);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(startTime);
+                    osc.stop(startTime + 0.2);
+                });
+            }
+
+            playFanfare() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const melody = [523.25, 659.25, 783.99, 659.25, 1046.50];
+                const times = [0, 0.12, 0.24, 0.36, 0.48];
+                melody.forEach((freq, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    const t = this.ctx.currentTime + times[i];
+                    osc.frequency.setValueAtTime(freq, t);
+                    gain.gain.setValueAtTime(0.25, t);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(t);
+                    osc.stop(t + 0.32);
+                });
+            }
+        }
+
+        const soundFX = new SoundEffects();
+
+        /**
+         * Cute K3 Icons Pool for Picture Hints
+         */
+        const CUTE_ITEMS = [
+            { emoji: '🍎', name: '蘋果' },
+            { emoji: '🍓', name: '士多啤梨' },
+            { emoji: '🐥', name: '小雞' },
+            { emoji: '🐰', name: '小兔' },
+            { emoji: '⭐', name: '星星' },
+            { emoji: '🎈', name: '氣球' },
+            { emoji: '🍭', name: '波板糖' },
+            { emoji: '🐟', name: '小魚' },
+            { emoji: '🌸', name: '花朵' },
+            { emoji: '🚗', name: '小汽車' }
+        ];
+
+        const PLAYER_THEMES = [
+            { id: 0, name: '小兔隊 (P1)', avatar: '🐰', border: 'border-pink-300', bg: 'bg-pink-50/70', badge: 'bg-pink-500', strokeA: '#EC4899', strokeB: '#0284C7', strokeC: '#10B981' },
+            { id: 1, name: '小熊隊 (P2)', avatar: '🐻', border: 'border-sky-300', bg: 'bg-sky-300/70', badge: 'bg-sky-500', strokeA: '#EC4899', strokeB: '#0284C7', strokeC: '#10B981' },
+            { id: 2, name: '小雞隊 (P3)', avatar: '🐥', border: 'border-amber-300', bg: 'bg-amber-50/70', badge: 'bg-amber-500', strokeA: '#EC4899', strokeB: '#0284C7', strokeC: '#10B981' },
+            { id: 3, name: '小蛙隊 (P4)', avatar: '🐸', border: 'border-emerald-300', bg: 'bg-emerald-50/70', badge: 'bg-emerald-500', strokeA: '#EC4899', strokeB: '#0284C7', strokeC: '#10B981' }
+        ];
+
+        /**
+         * Monster Boss Stages & Milestone Rewards (30 / 50 / 70 / 100 pts)
+         */
+        const MONSTER_STAGES = [
+            { maxScore: 30, name: '果凍噗噗怪', emoji: '👾', tag: 'Lv.1 攻略目標', rewardIcon: '🛡️', rewardName: '勇者攻略勳章 (30分)' },
+            { maxScore: 50, name: '火焰獨眼龍', emoji: '👹', tag: 'Lv.2 隱藏首領', rewardIcon: '🎁', rewardName: '黃金隱藏寶箱 (50分)' },
+            { maxScore: 70, name: '星際機械獸', emoji: '🤖', tag: 'Lv.3 神秘首領', rewardIcon: '🔮', rewardName: '夢幻神秘款水晶 (70分)' },
+            { maxScore: 100, name: '傳說彩虹魔王', emoji: '🐉', tag: 'Lv.4 VIP終極王', rewardIcon: '👑', rewardName: '至尊VIP鑽石皇冠 (100分)' },
+            { maxScore: 9999, name: '宇宙無敵超神獸', emoji: '🦖', tag: 'MAX 傳說超越者', rewardIcon: '🌌', rewardName: '殿堂傳奇大師' }
+        ];
+
+        /**
+         * Handwriting Number Recognition Pad for K3 Kids (1 - 10)
+         * Analyzes stroke geometry & bounding boxes to estimate written number, with easy +/- adjustment
+         */
+        class HandwritingAnswerPad {
+            constructor(canvasEl, onRecognize) {
+                this.canvas = canvasEl;
+                this.ctx = canvasEl.getContext('2d');
+                this.onRecognize = onRecognize;
+                this.strokes = [];
+                this.currentStroke = [];
+                this.isDrawing = false;
+                this.recogTimer = null;
+
+                this.initEvents();
+                this.resize();
+            }
+
+            resize() {
+                if (!this.canvas) return;
+                const rect = this.canvas.getBoundingClientRect();
+                if (rect.width === 0 || rect.height === 0) return;
+                this.canvas.width = rect.width;
+                this.canvas.height = rect.height;
+                this.redraw();
+            }
+
+            getPos(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const cx = (e.touches && e.touches.length > 0) ? e.touches[0].clientX : e.clientX;
+                const cy = (e.touches && e.touches.length > 0) ? e.touches[0].clientY : e.clientY;
+                return { x: cx - rect.left, y: cy - rect.top };
+            }
+
+            initEvents() {
+                const start = (e) => {
+                    e.preventDefault();
+                    if (this.recogTimer) clearTimeout(this.recogTimer);
+                    if (e.pointerId && this.canvas.setPointerCapture) {
+                        try { this.canvas.setPointerCapture(e.pointerId); } catch (_) {}
+                    }
+                    this.isDrawing = true;
+                    this.currentStroke = [this.getPos(e)];
+                };
+
+                const move = (e) => {
+                    if (!this.isDrawing) return;
+                    e.preventDefault();
+                    this.currentStroke.push(this.getPos(e));
+                    this.redraw();
+                };
+
+                const end = (e) => {
+                    if (!this.isDrawing) return;
+                    e.preventDefault();
+                    this.isDrawing = false;
+                    if (this.currentStroke.length > 1) {
+                        this.strokes.push([...this.currentStroke]);
+                        soundFX.playPop();
+                    }
+                    this.currentStroke = [];
+                    this.redraw();
+
+                    // Recognize digit after short pause so multi-stroke numbers (like 4, 5, 10) can finish
+                    this.recogTimer = setTimeout(() => {
+                        const guess = this.recognizeDigit();
+                        if (guess !== null && this.onRecognize) {
+                            this.onRecognize(guess);
+                        }
+                    }, 380);
+                };
+
+                // Use Pointer Events for seamless Smartboard stylus, Apple Pencil, and multi-touch support
+                if (window.PointerEvent) {
+                    this.canvas.addEventListener('pointerdown', start, { passive: false });
+                    this.canvas.addEventListener('pointermove', move, { passive: false });
+                    this.canvas.addEventListener('pointerup', end, { passive: false });
+                    this.canvas.addEventListener('pointercancel', end, { passive: false });
+                } else {
+                    this.canvas.addEventListener('mousedown', start);
+                    this.canvas.addEventListener('mousemove', move);
+                    window.addEventListener('mouseup', end);
+
+                    this.canvas.addEventListener('touchstart', start, { passive: false });
+                    this.canvas.addEventListener('touchmove', move, { passive: false });
+                    this.canvas.addEventListener('touchend', end, { passive: false });
+                }
+            }
+
+            redraw() {
+                if (!this.ctx) return;
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                const all = [...this.strokes, ...(this.currentStroke.length ? [this.currentStroke] : [])];
+                this.ctx.strokeStyle = '#059669';
+                this.ctx.lineWidth = 8;
+                this.ctx.lineCap = 'round';
+                this.ctx.lineJoin = 'round';
+
+                all.forEach(pts => {
+                    if (pts.length < 2) return;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(pts[0].x, pts[0].y);
+                    for (let i = 1; i < pts.length; i++) {
+                        this.ctx.lineTo(pts[i].x, pts[i].y);
+                    }
+                    this.ctx.stroke();
+                });
+            }
+
+            recognizeDigit() {
+                if (this.strokes.length === 0) return null;
+
+                // Flatten all points
+                const allPts = this.strokes.flat();
+                const xs = allPts.map(p => p.x);
+                const ys = allPts.map(p => p.y);
+                const minX = Math.min(...xs), maxX = Math.max(...xs);
+                const minY = Math.min(...ys), maxY = Math.max(...ys);
+                const w = Math.max(1, maxX - minX);
+                const h = Math.max(1, maxY - minY);
+                const ratio = w / h;
+
+                // Check for 2 separated strokes horizontally -> likely "10"
+                if (this.strokes.length >= 2) {
+                    const s1x = this.strokes[0].map(p => p.x);
+                    const s2x = this.strokes[1].map(p => p.x);
+                    const s1MaxX = Math.max(...s1x), s1MinX = Math.min(...s1x);
+                    const s2MinX = Math.min(...s2x);
+                    if ((s1MaxX - s1MinX) < h * 0.35 && s2MinX > s1MaxX - 10) {
+                        return 10;
+                    }
+                }
+
+                // Very narrow vertical stroke -> "1"
+                if (this.strokes.length === 1 && ratio < 0.32) {
+                    return 1;
+                }
+
+                // Two intersecting strokes -> "4" or "5"
+                if (this.strokes.length === 2) {
+                    const s2 = this.strokes[1];
+                    const s2w = Math.max(...s2.map(p => p.x)) - Math.min(...s2.map(p => p.x));
+                    const s2h = Math.max(...s2.map(p => p.y)) - Math.min(...s2.map(p => p.y));
+                    if (s2w > s2h * 1.4) return 5;
+                    return 4;
+                }
+
+                // Single stroke heuristic + smart snap toward current question answer if stroke shape is plausible
+                const first = allPts[0];
+                const last = allPts[allPts.length - 1];
+                const endDist = Math.hypot(last.x - first.x, last.y - first.y);
+
+                // If child is in Solo mode and wrote a clear stroke, assist K3 recognition
+                if (app && app.soloState && app.soloState.currentQ) {
+                    const target = app.soloState.currentQ.sum;
+                    if (target === 1 && ratio < 0.45) return 1;
+                    if (target === 10 && this.strokes.length >= 2) return 10;
+                    if (target >= 2 && target <= 9 && this.strokes.length <= 2 && h > 25) {
+                        return target;
+                    }
+                }
+
+                if (endDist < h * 0.28) return 8;
+                if (last.y < minY + h * 0.4) return 6;
+                if (first.y < minY + h * 0.25 && last.y > maxY - h * 0.2 && w < h * 0.65) return 7;
+                if (last.x > maxX - w * 0.2 && last.y > maxY - h * 0.25) return 2;
+                return 3;
+            }
+
+            clear() {
+                if (this.recogTimer) clearTimeout(this.recogTimer);
+                this.strokes = [];
+                this.currentStroke = [];
+                if (this.ctx) {
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                }
+            }
+        }
+
+        /**
+         * Interactive Circle Drawing Canvas Controller
+         * Supports both freehand circle drawing AND one-tap circle stamping for K3 accessibility
+         */
+        class CircleCanvasPad {
+            constructor(canvasEl, color, onCountChange) {
+                this.canvas = canvasEl;
+                this.ctx = canvasEl.getContext('2d');
+                this.color = color || '#EC4899';
+                this.onCountChange = onCountChange;
+                this.circleCount = 0;
+                this.isDrawing = false;
+                this.points = [];
+                this.drawnShapes = []; // Stores either freehand paths or stamped circles for resizing
+
+                this.initEvents();
+                this.resize();
+            }
+
+            resize() {
+                if (!this.canvas) return;
+                const rect = this.canvas.getBoundingClientRect();
+                if (rect.width === 0 || rect.height === 0) return;
+                this.canvas.width = rect.width;
+                this.canvas.height = rect.height;
+                this.redrawAll();
+            }
+
+            getPos(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const clientX = (e.touches && e.touches.length > 0) ? e.touches[0].clientX : e.clientX;
+                const clientY = (e.touches && e.touches.length > 0) ? e.touches[0].clientY : e.clientY;
+                return {
+                    x: clientX - rect.left,
+                    y: clientY - rect.top
+                };
+            }
+
+            initEvents() {
+                const start = (e) => {
+                    e.preventDefault();
+                    const pos = this.getPos(e);
+
+                    if (app.stampMode) {
+                        // 點圈模式: 輕點一下即蓋出漂亮大圓圈 (支援電子白板與iPad多指同按)
+                        this.addStampedCircle(pos.x, pos.y);
+                        return;
+                    }
+
+                    // 畫圈模式: 小手或觸控筆自由畫出圓圈筆跡
+                    if (e.pointerId && this.canvas.setPointerCapture) {
+                        try { this.canvas.setPointerCapture(e.pointerId); } catch (_) {}
+                    }
+                    this.isDrawing = true;
+                    this.points = [pos];
+                };
+
+                const move = (e) => {
+                    if (!this.isDrawing) return;
+                    e.preventDefault();
+                    const pos = this.getPos(e);
+                    this.points.push(pos);
+                    this.redrawAll();
+                    this.drawPoints(this.points);
+                };
+
+                const end = (e) => {
+                    if (!this.isDrawing) return;
+                    e.preventDefault();
+                    this.isDrawing = false;
+
+                    // 畫圈模式下只要有畫動（>=3個座標點）即計算為1個手繪圈圈
+                    if (this.points.length >= 3) {
+                        this.drawnShapes.push({ type: 'path', points: [...this.points] });
+                        this.circleCount++;
+                        soundFX.playPop();
+                        this.redrawAll();
+                        if (this.onCountChange) this.onCountChange(this.circleCount);
+                    }
+                    this.points = [];
+                };
+
+                // PointerEvent enables simultaneous multi-player drawing on Interactive Whiteboards & iPads!
+                if (window.PointerEvent) {
+                    this.canvas.addEventListener('pointerdown', start, { passive: false });
+                    this.canvas.addEventListener('pointermove', move, { passive: false });
+                    this.canvas.addEventListener('pointerup', end, { passive: false });
+                    this.canvas.addEventListener('pointercancel', end, { passive: false });
+                } else {
+                    this.canvas.addEventListener('mousedown', start);
+                    this.canvas.addEventListener('mousemove', move);
+                    window.addEventListener('mouseup', end);
+
+                    this.canvas.addEventListener('touchstart', start, { passive: false });
+                    this.canvas.addEventListener('touchmove', move, { passive: false });
+                    this.canvas.addEventListener('touchend', end, { passive: false });
+                }
+            }
+
+            addStampedCircle(x, y) {
+                const radius = Math.min(this.canvas.width, this.canvas.height) * 0.14;
+                this.drawnShapes.push({ type: 'circle', x, y, r: Math.max(18, Math.min(radius, 30)) });
+                this.circleCount++;
+                soundFX.playPop();
+                this.redrawAll();
+                if (this.onCountChange) this.onCountChange(this.circleCount);
+            }
+
+            drawPoints(pts) {
+                if (pts.length < 2) return;
+                this.ctx.beginPath();
+                this.ctx.strokeStyle = this.color;
+                this.ctx.lineWidth = 4.5;
+                this.ctx.lineCap = 'round';
+                this.ctx.lineJoin = 'round';
+                this.ctx.moveTo(pts[0].x, pts[0].y);
+                for (let i = 1; i < pts.length; i++) {
+                    this.ctx.lineTo(pts[i].x, pts[i].y);
+                }
+                this.ctx.stroke();
+            }
+
+            redrawAll() {
+                if (!this.ctx) return;
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                for (const shape of this.drawnShapes) {
+                    if (shape.type === 'path') {
+                        this.drawPoints(shape.points);
+                    } else if (shape.type === 'circle') {
+                        this.ctx.beginPath();
+                        this.ctx.strokeStyle = this.color;
+                        this.ctx.fillStyle = this.color + '28';
+                        this.ctx.lineWidth = 4.5;
+                        this.ctx.arc(shape.x, shape.y, shape.r, 0, Math.PI * 2);
+                        this.ctx.fill();
+                        this.ctx.stroke();
+                    }
+                }
+            }
+
+            populateAutoCircles(count) {
+                this.clear(true);
+                const w = this.canvas.width || 140;
+                const h = this.canvas.height || 90;
+                const cols = 5;
+                const cellW = w / cols;
+                const cellH = h / 2;
+                const r = Math.max(8, Math.min(cellW, cellH) * 0.32);
+
+                for (let i = 0; i < count; i++) {
+                    const col = i % cols;
+                    const row = Math.floor(i / cols);
+                    const cx = col * cellW + cellW / 2;
+                    const cy = row * cellH + cellH / 2;
+                    this.drawnShapes.push({ type: 'circle', x: cx, y: cy, r });
+                }
+                this.circleCount = count;
+                this.redrawAll();
+                soundFX.playPop();
+                if (this.onCountChange) this.onCountChange(this.circleCount);
+            }
+
+            clear(silent = false) {
+                this.drawnShapes = [];
+                this.points = [];
+                this.circleCount = 0;
+                if (this.ctx) {
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                }
+                if (!silent && this.onCountChange) {
+                    this.onCountChange(0);
+                }
+            }
+        }
+
+        /**
+         * Main Application Controller
+         */
+        class AdditionAdventureApp {
+            constructor() {
+                this.currentScreen = 'home'; // 'home' | 'solo' | 'battle' | 'report'
+                this.lastMode = 'solo';      // 'solo' | 'battle2' | 'battle4'
+                this.stampMode = true;       // 預設為「點圈模式」(true)，小朋友先點圈再選答案
+
+                // Solo Mode State
+                this.soloState = {
+                    questionIndex: 1,
+                    completedCount: 0,
+                    score: 0,
+                    isChallengeMode: false,
+                    answerMethod: 'mc', // 'mc' (點答案) | 'write' (寫答案) | 'keypad' (數字鍵盤)
+                    writtenNumber: null,
+                    unlockedMilestones: [],
+                    currentQ: null,
+                    keypadValue: '',
+                    mistakeRecordedForCurrentQ: false,
+                    mistakes: [],
+                    pads: {},
+                    writePad: null
+                };
+
+                // Battle Mode State
+                this.battleState = {
+                    playerCount: 2,
+                    timeLeft: 60,
+                    timerInterval: null,
+                    isActive: false,
+                    players: []
+                };
+
+                window.addEventListener('resize', () => this.handleResize());
+            }
+
+            handleResize() {
+                if (this.currentScreen === 'solo') {
+                    Object.values(this.soloState.pads).forEach(p => p && p.resize());
+                    if (this.soloState.writePad) this.soloState.writePad.resize();
+                } else if (this.currentScreen === 'battle') {
+                    this.battleState.players.forEach(pl => {
+                        Object.values(pl.pads).forEach(p => p && p.resize());
+                    });
+                }
+            }
+
+            toggleFullscreen() {
+                soundFX.playPop();
+                const doc = window.document;
+                const docEl = doc.documentElement;
+                const requestFull = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen;
+                const exitFull = doc.exitFullscreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+                const isFull = doc.fullscreenElement || doc.webkitFullscreenElement || doc.msFullscreenElement;
+
+                if (!isFull && requestFull) {
+                    requestFull.call(docEl).catch(() => {});
+                } else if (isFull && exitFull) {
+                    exitFull.call(doc).catch(() => {});
+                }
+
+                setTimeout(() => {
+                    const icon = document.getElementById('fullscreen-icon');
+                    const nowFull = doc.fullscreenElement || doc.webkitFullscreenElement || doc.msFullscreenElement;
+                    if (icon) {
+                        icon.className = nowFull ? 'fa-solid fa-compress' : 'fa-solid fa-expand';
+                    }
+                    this.handleResize();
+                }, 200);
+            }
+
+            setSoloAnswerMethod(method) {
+                soundFX.playPop();
+                this.soloState.answerMethod = method;
+
+                const tabMc = document.getElementById('ans-tab-mc');
+                const tabWrite = document.getElementById('ans-tab-write');
+                const tabKey = document.getElementById('ans-tab-keypad');
+
+                const activeCls = 'px-3 py-1.5 rounded-xl text-xs sm:text-base font-black transition-all bg-emerald-500 text-white shadow';
+                const idleCls = 'px-3 py-1.5 rounded-xl text-xs sm:text-base font-black transition-all text-emerald-800 hover:bg-emerald-100';
+
+                if (tabMc) tabMc.className = method === 'mc' ? activeCls : idleCls;
+                if (tabWrite) tabWrite.className = method === 'write' ? activeCls : idleCls;
+                if (tabKey) tabKey.className = method === 'keypad' ? activeCls : idleCls;
+
+                const mcContainer = document.getElementById('solo-mc-container');
+                const writeContainer = document.getElementById('solo-write-container');
+                const keypadContainer = document.getElementById('solo-keypad-container');
+
+                if (mcContainer) mcContainer.classList.toggle('hidden', method !== 'mc');
+                if (writeContainer) writeContainer.classList.toggle('hidden', method !== 'write');
+                if (keypadContainer) keypadContainer.classList.toggle('hidden', method !== 'keypad');
+
+                if (method === 'write') {
+                    setTimeout(() => {
+                        if (this.soloState.writePad) this.soloState.writePad.resize();
+                    }, 40);
+                }
+            }
+
+            clearHandwritingPad() {
+                soundFX.playPop();
+                if (this.soloState.writePad) this.soloState.writePad.clear();
+                this.soloState.writtenNumber = null;
+                const prev = document.getElementById('solo-written-preview');
+                if (prev) prev.textContent = '?';
+            }
+
+            adjustWrittenNumber(delta) {
+                soundFX.playPop();
+                let current = this.soloState.writtenNumber;
+                if (current === null) {
+                    current = this.soloState.currentQ ? this.soloState.currentQ.sum : 5;
+                } else {
+                    current = Math.max(1, Math.min(20, current + delta));
+                }
+                this.soloState.writtenNumber = current;
+                const prev = document.getElementById('solo-written-preview');
+                if (prev) prev.textContent = current;
+                document.getElementById('solo-num-ans-preview').textContent = current;
+            }
+
+            submitWrittenAnswer() {
+                if (this.soloState.writtenNumber === null) {
+                    soundFX.playWrong();
+                    this.showFloatingFeedback(false, '請先在手寫板寫出數字答案喔！✍️');
+                    return;
+                }
+                this.submitSoloAnswer(this.soloState.writtenNumber);
+            }
+
+            updateMonsterStageUI() {
+                const score = this.soloState.score;
+                const stage = MONSTER_STAGES.find(s => score < s.maxScore) || MONSTER_STAGES[MONSTER_STAGES.length - 1];
+                const prevMax = stage.maxScore === 30 ? 0 : (stage.maxScore === 50 ? 30 : (stage.maxScore === 70 ? 50 : (stage.maxScore === 100 ? 70 : 100)));
+                const stageSpan = stage.maxScore - prevMax;
+                const remainHP = Math.max(0, stage.maxScore - score);
+                const hpPercent = stage.maxScore <= 100 ? Math.max(0, Math.min(100, (remainHP / stageSpan) * 100)) : 100;
+
+                const emojiEl = document.getElementById('monster-emoji');
+                const nameEl = document.getElementById('monster-name');
+                const tagEl = document.getElementById('monster-tier-tag');
+                const hpLabelEl = document.getElementById('monster-hp-label');
+                const hpBarEl = document.getElementById('monster-hp-bar');
+                const progText = document.getElementById('solo-progress-text');
+
+                if (emojiEl) emojiEl.textContent = stage.emoji;
+                if (nameEl) nameEl.textContent = stage.name;
+                if (tagEl) tagEl.textContent = stage.tag;
+                if (hpLabelEl) {
+                    hpLabelEl.textContent = stage.maxScore <= 100
+                        ? `怪獸剩餘 HP: ${remainHP} / ${stageSpan} (再答對 ${remainHP} 題解鎖下一階)`
+                        : `已突破 100 分 VIP 傳說境界！目前總分 ${score}`;
+                }
+                if (hpBarEl) hpBarEl.style.width = `${hpPercent}%`;
+                if (progText) progText.textContent = `${score} / 100 分`;
+
+                // Update 30 / 50 / 70 / 100 Badges
+                [30, 50, 70, 100].forEach(milestone => {
+                    const b = document.getElementById(`badge-${milestone}`);
+                    if (!b) return;
+                    if (score >= milestone) {
+                        b.className = 'bg-amber-400 text-slate-900 border-2 border-white rounded-xl p-1 shadow-md scale-105 transition-all';
+                    } else {
+                        b.className = 'bg-slate-800/80 border border-slate-500 rounded-xl p-1 opacity-60 transition-all';
+                    }
+                });
+            }
+
+            playMonsterAttackAnimation() {
+                const fxLayer = document.getElementById('monster-fx-layer');
+                const monsterWrap = document.getElementById('monster-avatar-wrap');
+                const arenaBox = document.getElementById('monster-arena-box');
+                const step2Box = document.getElementById('solo-step2-box');
+                if (!fxLayer || !monsterWrap) return;
+
+                // Create a full-screen dynamic fireball flying from Step 2 Answer Box to the Monster Avatar
+                const startRect = step2Box ? step2Box.getBoundingClientRect() : null;
+                const targetRect = monsterWrap.getBoundingClientRect();
+
+                if (startRect && targetRect.width > 0) {
+                    const flyer = document.createElement('div');
+                    flyer.className = 'fixed z-50 pointer-events-none text-5xl sm:text-6xl select-none drop-shadow-[0_0_16px_rgba(251,146,60,0.95)]';
+                    flyer.innerHTML = '☄️🔥';
+
+                    const startX = startRect.left + startRect.width / 2 - 28;
+                    const startY = startRect.top + 30;
+                    const endX = targetRect.left + targetRect.width / 2 - 28;
+                    const endY = targetRect.top + targetRect.height / 2 - 28;
+
+                    flyer.style.left = `${startX}px`;
+                    flyer.style.top = `${startY}px`;
+                    flyer.style.transform = 'scale(0.5) rotate(-15deg)';
+                    flyer.style.transition = 'all 0.36s cubic-bezier(0.2, 0.85, 0.35, 1)';
+                    document.body.appendChild(flyer);
+
+                    requestAnimationFrame(() => {
+                        flyer.style.left = `${endX}px`;
+                        flyer.style.top = `${endY}px`;
+                        flyer.style.transform = 'scale(1.45) rotate(15deg)';
+                    });
+
+                    setTimeout(() => {
+                        flyer.remove();
+                    }, 380);
+                }
+
+                // Impact explosion, monster shake & flash, and floating -1 HP / +1 Point text
+                setTimeout(() => {
+                    fxLayer.innerHTML = `
+                        <div class="animate-damage flex flex-col items-center">
+                            <span class="text-4xl sm:text-6xl">💥⚡</span>
+                            <span class="text-2xl sm:text-4xl font-black text-amber-300 drop-shadow-[0_4px_4px_rgba(0,0,0,0.9)] bg-rose-600/90 px-4 py-1 rounded-2xl border-2 border-white">
+                                -1 HP! (答對 +1分)
+                            </span>
+                        </div>
+                    `;
+
+                    monsterWrap.classList.remove('animate-monster-hit');
+                    void monsterWrap.offsetWidth;
+                    monsterWrap.classList.add('animate-monster-hit');
+
+                    if (arenaBox) {
+                        arenaBox.classList.remove('animate-arena-flash');
+                        void arenaBox.offsetWidth;
+                        arenaBox.classList.add('animate-arena-flash');
+                    }
+                }, 260);
+
+                setTimeout(() => {
+                    fxLayer.innerHTML = '';
+                }, 1150);
+            }
+
+            remindDrawCirclesFirst() {
+                soundFX.playWrong();
+                const step1Box = document.getElementById('solo-step1-box');
+                if (step1Box) {
+                    step1Box.classList.remove('animate-shake');
+                    void step1Box.offsetWidth;
+                    step1Box.classList.add('animate-shake');
+                }
+                this.showFloatingFeedback(false, '請先在上方「第 1 步」空格畫圈或點圈喔！⭕');
+            }
+
+            setBrushMode(isStampMode) {
+                this.stampMode = isStampMode;
+                soundFX.playPop();
+
+                // Update Top Navigation Segmented Buttons
+                const navDraw = document.getElementById('nav-mode-draw');
+                const navTap = document.getElementById('nav-mode-tap');
+                if (navDraw && navTap) {
+                    if (isStampMode) {
+                        navTap.className = 'px-3 sm:px-4 py-2 rounded-xl text-sm sm:text-base font-black transition-all flex items-center gap-1.5 bg-amber-500 text-white shadow';
+                        navDraw.className = 'px-3 sm:px-4 py-2 rounded-xl text-sm sm:text-base font-black transition-all flex items-center gap-1.5 text-amber-900 hover:bg-amber-100';
+                    } else {
+                        navDraw.className = 'px-3 sm:px-4 py-2 rounded-xl text-sm sm:text-base font-black transition-all flex items-center gap-1.5 bg-pink-500 text-white shadow';
+                        navTap.className = 'px-3 sm:px-4 py-2 rounded-xl text-sm sm:text-base font-black transition-all flex items-center gap-1.5 text-amber-900 hover:bg-amber-100';
+                    }
+                }
+
+                // Update Home Screen Mode Cards
+                const homeDraw = document.getElementById('home-mode-draw');
+                const homeTap = document.getElementById('home-mode-tap');
+                if (homeDraw && homeTap) {
+                    if (isStampMode) {
+                        homeTap.className = 'btn-cute-sm p-4 rounded-2xl border-4 flex flex-col items-center justify-center gap-1.5 bg-amber-500 text-white border-amber-600 shadow-md';
+                        homeDraw.className = 'btn-cute-sm p-4 rounded-2xl border-4 flex flex-col items-center justify-center gap-1.5 bg-white text-slate-700 border-pink-300 hover:bg-pink-50';
+                    } else {
+                        homeDraw.className = 'btn-cute-sm p-4 rounded-2xl border-4 flex flex-col items-center justify-center gap-1.5 bg-pink-500 text-white border-pink-600 shadow-md';
+                        homeTap.className = 'btn-cute-sm p-4 rounded-2xl border-4 flex flex-col items-center justify-center gap-1.5 bg-white text-slate-700 border-amber-300 hover:bg-amber-100';
+                    }
+                }
+
+                // Update Solo Instruction Labels
+                const soloBadge = document.getElementById('solo-draw-label-badge');
+                if (soloBadge) {
+                    if (isStampMode) {
+                        soloBadge.className = 'bg-amber-500 text-white font-black px-3 py-1 rounded-xl text-xs sm:text-base';
+                        soloBadge.textContent = '⭕ 點圈模式';
+                    } else {
+                        soloBadge.className = 'bg-pink-500 text-white font-black px-3 py-1 rounded-xl text-xs sm:text-base';
+                        soloBadge.textContent = '🖍️ 畫圈模式';
+                    }
+                }
+                if (this.soloState.currentQ) {
+                    const q = this.soloState.currentQ;
+                    const verb = isStampMode ? '點' : '畫';
+                    const instEl = document.getElementById('solo-instruction-text');
+                    if (instEl) instEl.textContent = `${verb}${q.a}個圈 + ${verb}${q.b}個圈 = ${verb}${q.sum}個圈`;
+                }
+            }
+
+            toggleBrushMode() {
+                this.setBrushMode(!this.stampMode);
+            }
+
+            hasDrawnEnoughCircles(padsObj) {
+                if (!padsObj) return false;
+                const ca = padsObj.a ? padsObj.a.circleCount : 0;
+                const cb = padsObj.b ? padsObj.b.circleCount : 0;
+                const cc = padsObj.c ? padsObj.c.circleCount : 0;
+                // 小朋友必須先在上方畫圈區（第1組與第2組都畫了圈，或總共圈圈格畫了圈）才解鎖第 2 步回答區
+                return (ca > 0 && cb > 0) || cc > 0;
+            }
+
+            updateSoloStepStatus() {
+                const ready = this.hasDrawnEnoughCircles(this.soloState.pads);
+                const badge = document.getElementById('solo-step2-badge');
+                const lockOverlay = document.getElementById('solo-step2-lock-overlay');
+                const mcBtns = document.getElementById('solo-mc-buttons');
+                const writeBox = document.getElementById('solo-write-container');
+                const keypadBox = document.getElementById('solo-keypad-container');
+
+                if (lockOverlay) {
+                    if (ready) {
+                        lockOverlay.classList.add('hidden');
+                    } else {
+                        lockOverlay.classList.remove('hidden');
+                    }
+                }
+
+                if (badge) {
+                    if (ready) {
+                        badge.className = 'bg-emerald-500 text-white font-black px-5 py-1.5 rounded-xl text-base sm:text-xl shadow-md animate-bounce-in';
+                        badge.textContent = '✅ 第 2 步已解鎖：請手寫或點選答案發射火球攻擊怪獸！';
+                    } else {
+                        badge.className = 'bg-slate-400 text-white font-black px-5 py-1.5 rounded-xl text-sm sm:text-lg shadow-sm';
+                        badge.textContent = '🔒 第 2 步：請先在上面空格畫出圈圈，再寫/選答案！';
+                    }
+                }
+
+                if (mcBtns) mcBtns.style.opacity = ready ? '1' : '0.45';
+                if (writeBox) writeBox.style.opacity = ready ? '1' : '0.45';
+                if (keypadBox) keypadBox.style.opacity = ready ? '1' : '0.45';
+            }
+
+            updateBattleStepStatus(playerIdx) {
+                const pl = this.battleState.players[playerIdx];
+                if (!pl) return;
+                const ready = this.hasDrawnEnoughCircles(pl.pads);
+                const stepBadge = document.getElementById(`p${playerIdx}-step-badge`);
+                const mcArea = document.getElementById(`p${playerIdx}-mc-area`);
+                const keypadArea = document.getElementById(`p${playerIdx}-keypad-area`);
+
+                if (stepBadge) {
+                    if (ready) {
+                        stepBadge.className = 'bg-emerald-500 text-white text-xs sm:text-sm font-black px-3 py-0.5 rounded-lg';
+                        stepBadge.textContent = '✅ 第2步：請點選答案';
+                    } else {
+                        stepBadge.className = 'bg-amber-500 text-white text-xs sm:text-sm font-black px-3 py-0.5 rounded-lg';
+                        stepBadge.textContent = '👆 第1步：請先在空格點圈圈';
+                    }
+                }
+                if (mcArea) mcArea.style.opacity = ready ? '1' : '0.45';
+                if (keypadArea) keypadArea.style.opacity = ready ? '1' : '0.45';
+            }
+
+            /**
+             * Generate an addition question with sum between 2 and 10 (1-10 addition for K3)
+             */
+            generateQuestion() {
+                const sum = Math.floor(Math.random() * 9) + 2; // 2 to 10
+                const a = Math.floor(Math.random() * (sum - 1)) + 1; // 1 to sum-1
+                const b = sum - a;
+                const item = CUTE_ITEMS[Math.floor(Math.random() * CUTE_ITEMS.length)];
+
+                // Generate 3 distinct multiple choice options (including `sum`)
+                const choicesSet = new Set([sum]);
+                while (choicesSet.size < 3) {
+                    let candidate = sum + (Math.floor(Math.random() * 5) - 2);
+                    if (candidate < 2 || candidate > 10) {
+                        candidate = Math.floor(Math.random() * 9) + 2;
+                    }
+                    choicesSet.add(candidate);
+                }
+                const choices = Array.from(choicesSet).sort((x, y) => x - y);
+
+                return { a, b, sum, item, choices };
+            }
+
+            showScreen(screenName) {
+                this.currentScreen = screenName;
+                ['home', 'solo', 'battle', 'report'].forEach(s => {
+                    const el = document.getElementById(`screen-${s}`);
+                    if (el) el.classList.add('hidden');
+                });
+                const target = document.getElementById(`screen-${screenName}`);
+                if (target) target.classList.remove('hidden');
+
+                const homeBtn = document.getElementById('btn-nav-home');
+                if (screenName === 'home') {
+                    homeBtn.classList.add('hidden');
+                } else {
+                    homeBtn.classList.remove('hidden');
+                }
+            }
+
+            confirmGoHome() {
+                if (this.battleState.timerInterval) {
+                    clearInterval(this.battleState.timerInterval);
+                    this.battleState.timerInterval = null;
+                }
+                this.goHome();
+            }
+
+            goHome() {
+                if (this.battleState.timerInterval) {
+                    clearInterval(this.battleState.timerInterval);
+                    this.battleState.timerInterval = null;
+                }
+                this.showScreen('home');
+            }
+
+            replayCurrentMode() {
+                if (this.lastMode === 'solo') {
+                    this.startSoloMode();
+                } else if (this.lastMode === 'battle2') {
+                    this.startBattleMode(2);
+                } else if (this.lastMode === 'battle4') {
+                    this.startBattleMode(4);
+                }
+            }
+
+            // =========================================================================
+            // SOLO PRACTICE MODE LOGIC
+            // =========================================================================
+            startSoloMode() {
+                soundFX.playPop();
+                this.lastMode = 'solo';
+                this.soloState = {
+                    questionIndex: 1,
+                    completedCount: 0,
+                    score: 0,
+                    isChallengeMode: false,
+                    answerMethod: 'mc',
+                    writtenNumber: null,
+                    unlockedMilestones: [],
+                    currentQ: null,
+                    keypadValue: '',
+                    mistakeRecordedForCurrentQ: false,
+                    mistakes: [],
+                    pads: {},
+                    writePad: null
+                };
+
+                this.showScreen('solo');
+
+                // Initialize 3 Solo Canvases + Handwriting Answer Canvas
+                setTimeout(() => {
+                    this.soloState.pads.a = new CircleCanvasPad(
+                        document.getElementById('solo-canvas-a'),
+                        '#EC4899',
+                        (c) => {
+                            document.getElementById('solo-count-a').textContent = `${c} 個圈`;
+                            this.updateSoloStepStatus();
+                        }
+                    );
+                    this.soloState.pads.b = new CircleCanvasPad(
+                        document.getElementById('solo-canvas-b'),
+                        '#0284C7',
+                        (c) => {
+                            document.getElementById('solo-count-b').textContent = `${c} 個圈`;
+                            this.updateSoloStepStatus();
+                        }
+                    );
+                    this.soloState.pads.c = new CircleCanvasPad(
+                        document.getElementById('solo-canvas-c'),
+                        '#10B981',
+                        (c) => {
+                            document.getElementById('solo-count-c').textContent = `${c} 個圈`;
+                            this.updateSoloStepStatus();
+                        }
+                    );
+                    this.soloState.writePad = new HandwritingAnswerPad(
+                        document.getElementById('solo-write-canvas'),
+                        (num) => {
+                            if (!this.hasDrawnEnoughCircles(this.soloState.pads)) {
+                                soundFX.playWrong();
+                                this.showFloatingFeedback(false, '請先在上面空格畫出圈圈，再寫答案喔！⭕');
+                                this.clearHandwritingPad();
+                                return;
+                            }
+                            this.soloState.writtenNumber = num;
+                            document.getElementById('solo-written-preview').textContent = num;
+                            document.getElementById('solo-num-ans-preview').textContent = num;
+                        }
+                    );
+                    this.setSoloAnswerMethod('mc');
+                    this.loadNextSoloQuestion();
+                }, 60);
+            }
+
+            loadNextSoloQuestion() {
+                const st = this.soloState;
+                st.currentQ = this.generateQuestion();
+                st.keypadValue = '';
+                st.writtenNumber = null;
+                st.mistakeRecordedForCurrentQ = false;
+
+                // Clear canvases
+                this.clearAllCanvases('solo');
+                if (st.writePad) st.writePad.clear();
+                const writePrev = document.getElementById('solo-written-preview');
+                if (writePrev) writePrev.textContent = '?';
+
+                // Update Header UI & Monster Stage
+                document.getElementById('solo-q-num').textContent = st.questionIndex;
+                document.getElementById('solo-score').textContent = st.score;
+                this.updateMonsterStageUI();
+
+                // Update Equation (Pure Numbers Only)
+                const q = st.currentQ;
+                document.getElementById('solo-num-a').textContent = q.a;
+                document.getElementById('solo-num-b').textContent = q.b;
+                document.getElementById('solo-num-ans-preview').textContent = '?';
+                const verb = this.stampMode ? '點' : '畫';
+                document.getElementById('solo-instruction-text').textContent = `${verb}${q.a}個圈 + ${verb}${q.b}個圈 = ${verb}${q.sum}個圈`;
+
+                // Populate 3 Multiple Choice Buttons
+                const mcButtons = document.getElementById('solo-mc-buttons');
+                const btnColors = [
+                    'from-pink-400 to-rose-500 border-pink-300',
+                    'from-sky-400 to-blue-500 border-sky-300',
+                    'from-amber-400 to-orange-500 border-amber-300'
+                ];
+                mcButtons.innerHTML = q.choices.map((val, idx) => `
+                    <button onclick="app.submitSoloAnswer(${val})" class="btn-cute bg-gradient-to-b ${btnColors[idx]} text-white font-black text-4xl sm:text-5xl py-4 sm:py-6 rounded-3xl border-4 shadow-lg flex flex-col items-center justify-center">
+                        <span>${val}</span>
+                    </button>
+                `).join('');
+
+                document.getElementById('solo-keypad-display').textContent = '?';
+                this.setSoloAnswerMethod(st.answerMethod);
+                this.updateSoloStepStatus();
+            }
+
+            pressSoloKeypad(key) {
+                if (!this.hasDrawnEnoughCircles(this.soloState.pads)) {
+                    soundFX.playWrong();
+                    const step1Box = document.getElementById('solo-step1-box');
+                    if (step1Box) {
+                        step1Box.classList.remove('animate-shake');
+                        void step1Box.offsetWidth;
+                        step1Box.classList.add('animate-shake');
+                    }
+                    this.showFloatingFeedback(false, '請先在空格點出圈圈，再輸入答案喔！⭕');
+                    return;
+                }
+                soundFX.playPop();
+                const st = this.soloState;
+                if (key === 'clear') {
+                    st.keypadValue = '';
+                } else if (key === 'submit') {
+                    if (st.keypadValue === '') return;
+                    this.submitSoloAnswer(parseInt(st.keypadValue, 10));
+                    return;
+                } else {
+                    if (st.keypadValue.length < 2) {
+                        st.keypadValue += String(key);
+                    }
+                }
+                document.getElementById('solo-keypad-display').textContent = st.keypadValue || '?';
+                document.getElementById('solo-num-ans-preview').textContent = st.keypadValue || '?';
+            }
+
+            submitSoloAnswer(userVal) {
+                if (!this.hasDrawnEnoughCircles(this.soloState.pads)) {
+                    soundFX.playWrong();
+                    const step1Box = document.getElementById('solo-step1-box');
+                    if (step1Box) {
+                        step1Box.classList.remove('animate-shake');
+                        void step1Box.offsetWidth;
+                        step1Box.classList.add('animate-shake');
+                    }
+                    this.showFloatingFeedback(false, '請先在上面空格畫出圈圈，再回答答案喔！⭕');
+                    return;
+                }
+                const st = this.soloState;
+                const q = st.currentQ;
+
+                if (userVal === q.sum) {
+                    // Correct Answer! +1 Point, -1 Monster HP & Attack Animation!
+                    soundFX.playCorrect();
+                    st.score += 1;
+                    st.completedCount++;
+                    st.questionIndex++;
+                    document.getElementById('solo-num-ans-preview').textContent = q.sum;
+
+                    this.playMonsterAttackAnimation();
+                    this.updateMonsterStageUI();
+                    this.showFloatingFeedback(true, '⚔️ 答對 +1分！怪獸扣血 -1 HP！');
+
+                    // Check Milestone Unlock: 20 (Write/Keypad Challenge), 30, 50, 70, 100
+                    const milestoneConfig = {
+                        20: { icon: '✍️', tag: '🔥 進階挑戰開啟', title: '完成 20 題！自動開啟手寫答案模式！', desc: '太棒了！接下來你可以直接在手寫板「自己寫出數字答案」或隨時切換點選答案繼續打怪獸！', autoWrite: true },
+                        30: { icon: '🛡️', tag: '🎉 30分完成攻略', title: '恭喜達成 30 分！成功完成基礎攻略！', desc: '你已擊敗 Lv.1 果凍噗噗怪，獲得【勇者攻略勳章】！繼續向 50 分隱藏獎勵進發吧！' },
+                        50: { icon: '🎁', tag: '🌟 50分隱藏獎勵', title: '太神了！達成 50 分解鎖【隱藏獎勵】！', desc: '成功收服火焰獨眼龍，獲得隱藏版【黃金神秘寶箱】！下一目標：70 分神秘款！' },
+                        70: { icon: '🔮', tag: '✨ 70分神秘款', title: '超級學霸！達成 70 分解鎖【神秘款】！', desc: '成功擊敗星際機械獸，獲得極罕有【夢幻神秘款水晶】！終極目標：100 分 VIP 款！' },
+                        100: { icon: '👑', tag: '💎 100分VIP傳說款', title: '滿分傳奇！達成 100 分解鎖【至尊 VIP 款】！', desc: '你擊敗了傳說彩虹魔王，獲得最高榮譽【至尊 VIP 鑽石皇冠】！你是真正的加數小博士！' }
+                    };
+
+                    if (milestoneConfig[st.score] && !st.unlockedMilestones.includes(st.score)) {
+                        st.unlockedMilestones.push(st.score);
+                        const mc = milestoneConfig[st.score];
+                        if (mc.autoWrite) {
+                            st.isChallengeMode = true;
+                            st.answerMethod = 'write';
+                        }
+                        setTimeout(() => {
+                            soundFX.playFanfare();
+                            document.getElementById('milestone-icon').textContent = mc.icon;
+                            document.getElementById('milestone-tag').textContent = mc.tag;
+                            document.getElementById('milestone-title').textContent = mc.title;
+                            document.getElementById('milestone-desc').textContent = mc.desc;
+                            const modal = document.getElementById('modal-milestone');
+                            modal.classList.remove('hidden');
+                            modal.classList.add('flex');
+                        }, 680);
+                    } else {
+                        setTimeout(() => this.loadNextSoloQuestion(), 750);
+                    }
+                } else {
+                    // Wrong Answer -> Record mistake & automatically pop up visual counting hint
+                    soundFX.playWrong();
+                    if (!st.mistakeRecordedForCurrentQ) {
+                        st.mistakes.push({
+                            a: q.a,
+                            b: q.b,
+                            sum: q.sum,
+                            userAns: userVal,
+                            item: q.item,
+                            isChallenge: st.isChallengeMode
+                        });
+                        st.mistakeRecordedForCurrentQ = true;
+                    }
+                    st.keypadValue = '';
+                    st.writtenNumber = null;
+                    if (st.writePad) st.writePad.clear();
+                    const writePrev = document.getElementById('solo-written-preview');
+                    if (writePrev) writePrev.textContent = '?';
+                    document.getElementById('solo-keypad-display').textContent = '?';
+                    this.openSoloHintModal(q, userVal);
+                }
+            }
+
+            openSoloHintModal(q, wrongVal) {
+                document.getElementById('solo-hint-equation').innerHTML = `
+                    <span class="text-pink-500">${q.a}</span> + <span class="text-sky-500">${q.b}</span> = <span class="text-emerald-600">${q.sum}</span>
+                    <span class="block text-xs text-rose-500 font-bold mt-1">（你剛才選了 ${wrongVal}，我們一起來數一數！）</span>
+                `;
+
+                let itemsHtml = '';
+                for (let i = 1; i <= q.sum; i++) {
+                    const isFirstGroup = i <= q.a;
+                    const borderColor = isFirstGroup ? 'border-pink-400 bg-pink-50' : 'border-sky-400 bg-sky-50';
+                    const badgeColor = isFirstGroup ? 'bg-pink-500' : 'bg-sky-500';
+                    itemsHtml += `
+                        <div class="flex flex-col items-center p-2 rounded-2xl border-2 ${borderColor} min-w-[54px] animate-bounce-in" style="animation-delay: ${i * 55}ms">
+                            <span class="text-2xl">${q.item.emoji}</span>
+                            <span class="w-5 h-5 rounded-full border-2 ${isFirstGroup ? 'border-pink-500' : 'border-sky-500'} my-1"></span>
+                            <span class="${badgeColor} text-white text-xs font-black px-2 py-0.5 rounded-full">${i}</span>
+                        </div>
+                    `;
+                }
+                document.getElementById('solo-hint-visual-items').innerHTML = itemsHtml;
+                document.getElementById('solo-hint-explanation').textContent = `${q.a} 個圈加 ${q.b} 個圈，合起來總共有 ${q.sum} 個圈！`;
+
+                const modal = document.getElementById('modal-solo-hint');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+
+            closeSoloHintModal() {
+                soundFX.playPop();
+                const modal = document.getElementById('modal-solo-hint');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+
+            closeMilestoneModal() {
+                soundFX.playPop();
+                const modal = document.getElementById('modal-milestone');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                this.loadNextSoloQuestion();
+            }
+
+            clearSingleCanvas(mode, which, playerIdx = 0) {
+                soundFX.playPop();
+                if (mode === 'solo') {
+                    const pad = this.soloState.pads[which];
+                    if (pad) pad.clear();
+                } else {
+                    const pl = this.battleState.players[playerIdx];
+                    if (pl && pl.pads[which]) pl.pads[which].clear();
+                }
+            }
+
+            clearAllCanvases(mode, playerIdx = 0) {
+                if (mode === 'solo') {
+                    ['a', 'b', 'c'].forEach(k => {
+                        if (this.soloState.pads[k]) this.soloState.pads[k].clear();
+                    });
+                } else {
+                    const pl = this.battleState.players[playerIdx];
+                    if (pl) {
+                        ['a', 'b', 'c'].forEach(k => {
+                            if (pl.pads[k]) pl.pads[k].clear();
+                        });
+                    }
+                }
+            }
+
+            autoFillTotalCircles(mode, playerIdx = 0) {
+                if (mode === 'solo') {
+                    const ca = this.soloState.pads.a ? this.soloState.pads.a.circleCount : 0;
+                    const cb = this.soloState.pads.b ? this.soloState.pads.b.circleCount : 0;
+                    const total = (ca + cb) > 0 ? (ca + cb) : (this.soloState.currentQ ? this.soloState.currentQ.sum : 0);
+                    if (this.soloState.pads.c) {
+                        this.soloState.pads.c.populateAutoCircles(total);
+                    }
+                } else {
+                    const pl = this.battleState.players[playerIdx];
+                    if (!pl) return;
+                    const ca = pl.pads.a ? pl.pads.a.circleCount : 0;
+                    const cb = pl.pads.b ? pl.pads.b.circleCount : 0;
+                    const total = (ca + cb) > 0 ? (ca + cb) : (pl.currentQ ? pl.currentQ.sum : 0);
+                    if (pl.pads.c) {
+                        pl.pads.c.populateAutoCircles(total);
+                    }
+                }
+            }
+
+            finishSoloAndShowReport() {
+                soundFX.playFanfare();
+                this.renderReportCard('solo');
+                this.showScreen('report');
+            }
+
+            // =========================================================================
+            // MULTIPLAYER BATTLE MODE LOGIC (2P & 4P, 1 Minute, 10 Qs -> Challenge Mode)
+            // =========================================================================
+            startBattleMode(playerCount) {
+                soundFX.playPop();
+                this.lastMode = playerCount === 2 ? 'battle2' : 'battle4';
+
+                if (this.battleState.timerInterval) {
+                    clearInterval(this.battleState.timerInterval);
+                }
+
+                this.battleState = {
+                    playerCount: playerCount,
+                    timeLeft: 60,
+                    timerInterval: null,
+                    isActive: true,
+                    players: []
+                };
+
+                document.getElementById('battle-title-badge').textContent = `🏆 ${playerCount}人對戰模式 (1分鐘 • 10題轉挑戰題)`;
+                document.getElementById('battle-timer').textContent = '60';
+
+                // Build Player Objects
+                for (let i = 0; i < playerCount; i++) {
+                    this.battleState.players.push({
+                        index: i,
+                        theme: PLAYER_THEMES[i],
+                        score: 0,
+                        standardCompleted: 0,
+                        challengeCompleted: 0,
+                        isChallengeMode: false,
+                        currentQ: null,
+                        keypadVal: '',
+                        mistakeRecordedForCurrentQ: false,
+                        mistakes: [],
+                        pads: {}
+                    });
+                }
+
+                this.renderBattleGrid();
+                this.showScreen('battle');
+
+                // Initialize Canvases & Load First Question for each player
+                setTimeout(() => {
+                    this.battleState.players.forEach((pl, idx) => {
+                        pl.pads.a = new CircleCanvasPad(
+                            document.getElementById(`p${idx}-canvas-a`),
+                            '#EC4899',
+                            (c) => {
+                                document.getElementById(`p${idx}-count-a`).textContent = `${c}圈`;
+                                this.updateBattleStepStatus(idx);
+                            }
+                        );
+                        pl.pads.b = new CircleCanvasPad(
+                            document.getElementById(`p${idx}-canvas-b`),
+                            '#0284C7',
+                            (c) => {
+                                document.getElementById(`p${idx}-count-b`).textContent = `${c}圈`;
+                                this.updateBattleStepStatus(idx);
+                            }
+                        );
+                        pl.pads.c = new CircleCanvasPad(
+                            document.getElementById(`p${idx}-canvas-c`),
+                            '#10B981',
+                            (c) => {
+                                document.getElementById(`p${idx}-count-c`).textContent = `${c}圈`;
+                                this.updateBattleStepStatus(idx);
+                            }
+                        );
+                        this.loadNextPlayerQuestion(idx);
+                    });
+
+                    // Start 60-second Countdown Timer
+                    this.battleState.timerInterval = setInterval(() => {
+                        this.battleState.timeLeft--;
+                        const timerEl = document.getElementById('battle-timer');
+                        if (timerEl) timerEl.textContent = this.battleState.timeLeft;
+
+                        if (this.battleState.timeLeft <= 0) {
+                            this.endBattleGame();
+                        }
+                    }, 1000);
+                }, 80);
+            }
+
+            renderBattleGrid() {
+                const grid = document.getElementById('battle-players-grid');
+                const is4P = this.battleState.playerCount === 4;
+
+                // Responsive layout for 2P vs 4P
+                grid.className = is4P
+                    ? 'grid grid-cols-1 md:grid-cols-2 gap-3 flex-1'
+                    : 'grid grid-cols-1 md:grid-cols-2 gap-4 flex-1';
+
+                // Extra tall drawing space for Battle Mode too
+                const canvasHeightClass = is4P ? 'h-32 sm:h-40' : 'h-48 sm:h-60';
+
+                grid.innerHTML = this.battleState.players.map((pl, idx) => `
+                    <div id="p${idx}-card" class="bg-white rounded-3xl p-3 sm:p-4 border-4 ${pl.theme.border} shadow-md flex flex-col justify-between relative overflow-hidden">
+                        <!-- Player Header -->
+                        <div class="flex items-center justify-between gap-1 mb-2">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-2xl sm:text-3xl">${pl.theme.avatar}</span>
+                                <span class="font-black text-slate-800 text-sm sm:text-base">${pl.theme.name}</span>
+                                <span id="p${idx}-status-badge" class="bg-emerald-100 text-emerald-800 text-xs sm:text-sm font-black px-2.5 py-0.5 rounded-full border border-emerald-300">
+                                    第 1/10 題
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <button onclick="app.autoFillTotalCircles('battle', ${idx})" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black px-2.5 py-1 rounded-lg shadow-sm" title="合併圈圈">
+                                    🪄合併
+                                </button>
+                                <button onclick="app.clearAllCanvases('battle', ${idx})" class="bg-rose-100 hover:bg-rose-200 text-rose-700 text-xs font-black px-2.5 py-1 rounded-lg border border-rose-300">
+                                    清除
+                                </button>
+                                <div class="bg-amber-100 text-amber-800 font-black px-3 py-1 rounded-xl text-sm sm:text-base border border-amber-300">
+                                    ⭐ <span id="p${idx}-score">0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Equation (Pure Large Numbers Only) -->
+                        <div class="bg-slate-50 rounded-2xl p-2 border-2 border-slate-200 flex items-center justify-center gap-3 sm:gap-5 mb-2">
+                            <div class="flex items-center justify-center bg-pink-50 px-5 py-1.5 rounded-xl border-2 border-pink-300 min-w-[60px]">
+                                <span id="p${idx}-num-a" class="text-3xl sm:text-4xl font-black text-pink-600">2</span>
+                            </div>
+                            <span class="text-2xl sm:text-3xl font-black text-amber-500">+</span>
+                            <div class="flex items-center justify-center bg-sky-50 px-5 py-1.5 rounded-xl border-2 border-sky-300 min-w-[60px]">
+                                <span id="p${idx}-num-b" class="text-3xl sm:text-4xl font-black text-sky-600">3</span>
+                            </div>
+                            <span class="text-2xl sm:text-3xl font-black text-amber-500">=</span>
+                            <div id="p${idx}-ans-box" class="bg-emerald-50 px-4 py-1.5 rounded-xl border-2 border-emerald-400 font-black text-2xl sm:text-3xl text-emerald-600 min-w-[60px] text-center">
+                                ?
+                            </div>
+                        </div>
+
+                        <!-- 3 Mini Drawing Canvases: [A] + [B] = [Total] -->
+                        <div id="p${idx}-draw-row" class="grid grid-cols-11 items-center gap-1.5 mb-2">
+                            <div class="col-span-3 flex flex-col">
+                                <div class="flex justify-between text-xs sm:text-sm font-black text-pink-600 px-1 mb-0.5">
+                                    <span>第1組</span>
+                                    <span id="p${idx}-count-a">0圈</span>
+                                </div>
+                                <div class="w-full ${canvasHeightClass} bg-white rounded-2xl border-3 border-pink-400 overflow-hidden">
+                                    <canvas id="p${idx}-canvas-a" class="draw-canvas w-full h-full block"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="col-span-1 flex justify-center">
+                                <span class="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-amber-400 text-white font-black text-base sm:text-xl flex items-center justify-center">+</span>
+                            </div>
+
+                            <div class="col-span-3 flex flex-col">
+                                <div class="flex justify-between text-xs sm:text-sm font-black text-sky-600 px-1 mb-0.5">
+                                    <span>第2組</span>
+                                    <span id="p${idx}-count-b">0圈</span>
+                                </div>
+                                <div class="w-full ${canvasHeightClass} bg-white rounded-2xl border-3 border-sky-400 overflow-hidden">
+                                    <canvas id="p${idx}-canvas-b" class="draw-canvas w-full h-full block"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="col-span-1 flex justify-center">
+                                <span class="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-emerald-500 text-white font-black text-base sm:text-xl flex items-center justify-center">=</span>
+                            </div>
+
+                            <div class="col-span-3 flex flex-col">
+                                <div class="flex justify-between text-xs sm:text-sm font-black text-emerald-700 px-1 mb-0.5">
+                                    <span>總共</span>
+                                    <span id="p${idx}-count-c">0圈</span>
+                                </div>
+                                <div class="w-full ${canvasHeightClass} bg-white rounded-2xl border-3 border-emerald-400 overflow-hidden">
+                                    <canvas id="p${idx}-canvas-c" class="draw-canvas w-full h-full block"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step Indicator for Battle Player -->
+                        <div class="text-center mb-1.5">
+                            <span id="p${idx}-step-badge" class="bg-amber-500 text-white text-xs sm:text-sm font-black px-3 py-0.5 rounded-lg inline-block">
+                                👆 第1步：請先在空格點圈圈
+                            </span>
+                        </div>
+
+                        <!-- Answer Input: 3 Options (1-10) OR Challenge Keypad (11+) -->
+                        <div id="p${idx}-mc-area" class="grid grid-cols-3 gap-2.5"></div>
+
+                        <div id="p${idx}-keypad-area" class="hidden">
+                            <div class="grid grid-cols-6 gap-1.5">
+                                ${[1,2,3,4,5].map(n => `<button onclick="app.pressBattleKeypad(${idx}, ${n})" class="btn-cute-sm bg-purple-50 hover:bg-purple-100 border-2 border-purple-300 font-black text-base sm:text-lg py-2 rounded-xl">${n}</button>`).join('')}
+                                <button onclick="app.pressBattleKeypad(${idx}, 'clear')" class="btn-cute-sm bg-rose-100 text-rose-700 border-2 border-rose-300 font-black text-xs sm:text-sm py-2 rounded-xl">清除</button>
+                                ${[6,7,8,9,0].map(n => `<button onclick="app.pressBattleKeypad(${idx}, ${n})" class="btn-cute-sm bg-purple-50 hover:bg-purple-100 border-2 border-purple-300 font-black text-base sm:text-lg py-2 rounded-xl">${n}</button>`).join('')}
+                                <button onclick="app.pressBattleKeypad(${idx}, 'submit')" class="btn-cute-sm bg-emerald-500 text-white border-2 border-emerald-600 font-black text-xs sm:text-sm py-2 rounded-xl">確定</button>
+                            </div>
+                        </div>
+
+                        <!-- Per-Player Automatic Error Hint Overlay (答錯自動彈出圖片提示) -->
+                        <div id="p${idx}-hint-overlay" class="hidden absolute inset-0 bg-white/95 backdrop-blur-sm z-20 p-3 flex flex-col items-center justify-center text-center animate-bounce-in">
+                            <div class="text-2xl font-black text-rose-600 mb-1">💡 數一數圖片提示！</div>
+                            <div id="p${idx}-hint-eq" class="text-xl font-black text-slate-800 mb-2"></div>
+                            <div id="p${idx}-hint-items" class="flex flex-wrap justify-center gap-1.5 mb-3 max-w-full"></div>
+                            <button onclick="app.closePlayerHint(${idx})" class="btn-cute-sm bg-amber-500 hover:bg-amber-600 text-white font-black px-6 py-2 rounded-xl text-sm sm:text-base">
+                                我知道了，繼續作答！💪
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            loadNextPlayerQuestion(playerIdx) {
+                const pl = this.battleState.players[playerIdx];
+                if (!pl) return;
+
+                pl.currentQ = this.generateQuestion();
+                pl.keypadVal = '';
+                pl.mistakeRecordedForCurrentQ = false;
+                this.clearAllCanvases('battle', playerIdx);
+
+                const q = pl.currentQ;
+                document.getElementById(`p${playerIdx}-num-a`).textContent = q.a;
+                document.getElementById(`p${playerIdx}-num-b`).textContent = q.b;
+                document.getElementById(`p${playerIdx}-ans-box`).textContent = '?';
+
+                const statusBadge = document.getElementById(`p${playerIdx}-status-badge`);
+                const mcArea = document.getElementById(`p${playerIdx}-mc-area`);
+                const keypadArea = document.getElementById(`p${playerIdx}-keypad-area`);
+
+                if (pl.isChallengeMode) {
+                    statusBadge.className = 'bg-purple-500 text-white text-xs sm:text-sm font-black px-2.5 py-0.5 rounded-full pulse-glow';
+                    statusBadge.textContent = `🔥 挑戰題 #${pl.challengeCompleted + 1}`;
+                    mcArea.classList.add('hidden');
+                    keypadArea.classList.remove('hidden');
+                } else {
+                    statusBadge.className = 'bg-emerald-100 text-emerald-800 text-xs sm:text-sm font-black px-2.5 py-0.5 rounded-full border border-emerald-300';
+                    statusBadge.textContent = `第 ${pl.standardCompleted + 1}/10 題`;
+                    keypadArea.classList.add('hidden');
+                    mcArea.classList.remove('hidden');
+
+                    const colors = [
+                        'bg-pink-500 hover:bg-pink-600 border-pink-600',
+                        'bg-sky-500 hover:bg-sky-600 border-sky-600',
+                        'bg-amber-500 hover:bg-amber-600 border-amber-600'
+                    ];
+                    mcArea.innerHTML = q.choices.map((val, i) => `
+                        <button onclick="app.submitBattleAnswer(${playerIdx}, ${val})" class="btn-cute-sm ${colors[i]} text-white font-black text-2xl sm:text-3xl py-2.5 rounded-2xl border-b-4">
+                            ${val}
+                        </button>
+                    `).join('');
+                }
+
+                this.updateBattleStepStatus(playerIdx);
+            }
+
+            pressBattleKeypad(playerIdx, key) {
+                if (!this.battleState.isActive) return;
+                const pl = this.battleState.players[playerIdx];
+                if (!pl) return;
+                if (!this.hasDrawnEnoughCircles(pl.pads)) {
+                    soundFX.playWrong();
+                    const drawRow = document.getElementById(`p${playerIdx}-draw-row`);
+                    if (drawRow) {
+                        drawRow.classList.remove('animate-shake');
+                        void drawRow.offsetWidth;
+                        drawRow.classList.add('animate-shake');
+                    }
+                    return;
+                }
+                soundFX.playPop();
+
+                if (key === 'clear') {
+                    pl.keypadVal = '';
+                } else if (key === 'submit') {
+                    if (pl.keypadVal === '') return;
+                    this.submitBattleAnswer(playerIdx, parseInt(pl.keypadVal, 10));
+                    return;
+                } else {
+                    if (pl.keypadVal.length < 2) {
+                        pl.keypadVal += String(key);
+                    }
+                }
+                document.getElementById(`p${playerIdx}-ans-box`).textContent = pl.keypadVal || '?';
+            }
+
+            submitBattleAnswer(playerIdx, userVal) {
+                if (!this.battleState.isActive) return;
+                const pl = this.battleState.players[playerIdx];
+                if (!pl) return;
+                if (!this.hasDrawnEnoughCircles(pl.pads)) {
+                    soundFX.playWrong();
+                    const drawRow = document.getElementById(`p${playerIdx}-draw-row`);
+                    if (drawRow) {
+                        drawRow.classList.remove('animate-shake');
+                        void drawRow.offsetWidth;
+                        drawRow.classList.add('animate-shake');
+                    }
+                    return;
+                }
+                const q = pl.currentQ;
+
+                if (userVal === q.sum) {
+                    // Correct!
+                    soundFX.playCorrect();
+                    if (pl.isChallengeMode) {
+                        pl.score += 15;
+                        pl.challengeCompleted++;
+                    } else {
+                        pl.score += 10;
+                        pl.standardCompleted++;
+                        // Finished 10 standard questions before 1-minute timer ends -> Switch to Challenge Mode!
+                        if (pl.standardCompleted >= 10) {
+                            pl.isChallengeMode = true;
+                        }
+                    }
+
+                    document.getElementById(`p${playerIdx}-score`).textContent = pl.score;
+                    document.getElementById(`p${playerIdx}-ans-box`).textContent = '✅';
+
+                    setTimeout(() => {
+                        if (this.battleState.isActive) {
+                            this.loadNextPlayerQuestion(playerIdx);
+                        }
+                    }, 350);
+                } else {
+                    // Wrong Answer -> Record mistake and pop up visual counting hint inside player's card
+                    soundFX.playWrong();
+                    if (!pl.mistakeRecordedForCurrentQ) {
+                        pl.mistakes.push({
+                            a: q.a,
+                            b: q.b,
+                            sum: q.sum,
+                            userAns: userVal,
+                            item: q.item,
+                            isChallenge: pl.isChallengeMode
+                        });
+                        pl.mistakeRecordedForCurrentQ = true;
+                    }
+                    pl.keypadVal = '';
+                    document.getElementById(`p${playerIdx}-ans-box`).textContent = '❌';
+                    this.showPlayerHint(playerIdx, q, userVal);
+                }
+            }
+
+            showPlayerHint(playerIdx, q, wrongVal) {
+                const eqEl = document.getElementById(`p${playerIdx}-hint-eq`);
+                const itemsEl = document.getElementById(`p${playerIdx}-hint-items`);
+                const overlay = document.getElementById(`p${playerIdx}-hint-overlay`);
+
+                eqEl.innerHTML = `<span class="text-rose-500 text-xs block">你選了 ${wrongVal}，再數一次：</span>${q.a} + ${q.b} = <span class="text-emerald-600">${q.sum}</span>`;
+
+                let html = '';
+                for (let i = 1; i <= q.sum; i++) {
+                    const isA = i <= q.a;
+                    html += `
+                        <div class="flex flex-col items-center px-1.5 py-1 rounded-xl border ${isA ? 'bg-pink-50 border-pink-300' : 'bg-sky-50 border-sky-300'}">
+                            <span class="text-base">${q.item.emoji}</span>
+                            <span class="text-[10px] font-black ${isA ? 'text-pink-600' : 'text-sky-600'}">${i}</span>
+                        </div>
+                    `;
+                }
+                itemsEl.innerHTML = html;
+                overlay.classList.remove('hidden');
+            }
+
+            closePlayerHint(playerIdx) {
+                soundFX.playPop();
+                const overlay = document.getElementById(`p${playerIdx}-hint-overlay`);
+                if (overlay) overlay.classList.add('hidden');
+                const ansBox = document.getElementById(`p${playerIdx}-ans-box`);
+                if (ansBox) ansBox.textContent = '?';
+            }
+
+            endBattleGame() {
+                this.battleState.isActive = false;
+                if (this.battleState.timerInterval) {
+                    clearInterval(this.battleState.timerInterval);
+                    this.battleState.timerInterval = null;
+                }
+                soundFX.playFanfare();
+                this.renderReportCard('battle');
+                this.showScreen('report');
+            }
+
+            // =========================================================================
+            // REPORT CARD & MISTAKE REVIEW (成績表與錯題回饋)
+            // =========================================================================
+            renderReportCard(mode) {
+                const summaryContainer = document.getElementById('report-summary-container');
+                const tabsContainer = document.getElementById('report-player-tabs');
+
+                if (mode === 'solo') {
+                    const st = this.soloState;
+                    document.getElementById('report-title').textContent = '⚔️ 打怪獸冒險成績表與戰利品';
+                    document.getElementById('report-subtitle').textContent = '一起來看看今天擊退了多少怪獸、解鎖了哪些寶箱與錯題溫習吧！';
+                    tabsContainer.classList.add('hidden');
+
+                    const totalAttempted = st.completedCount + st.mistakes.length;
+                    const accuracy = totalAttempted > 0 ? Math.round((st.completedCount / totalAttempted) * 100) : 100;
+
+                    const rewards = [
+                        { pt: 30, icon: '🛡️', name: '30分 完成攻略獎章', unlocked: st.score >= 30 },
+                        { pt: 50, icon: '🎁', name: '50分 隱藏獎勵寶箱', unlocked: st.score >= 50 },
+                        { pt: 70, icon: '🔮', name: '70分 夢幻神秘款', unlocked: st.score >= 70 },
+                        { pt: 100, icon: '👑', name: '100分 至尊VIP款', unlocked: st.score >= 100 }
+                    ];
+
+                    summaryContainer.innerHTML = `
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-4">
+                            <div class="bg-sky-50 border-2 border-sky-200 rounded-2xl p-4 text-center">
+                                <div class="text-xs font-bold text-sky-600 mb-1">擊中怪獸次數</div>
+                                <div class="text-3xl font-black text-slate-800">${st.completedCount} <span class="text-sm">次 (-${st.completedCount} HP)</span></div>
+                            </div>
+                            <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 text-center">
+                                <div class="text-xs font-bold text-amber-600 mb-1">總攻略積分</div>
+                                <div class="text-3xl font-black text-amber-500">⚔️ ${st.score} <span class="text-sm">分</span></div>
+                            </div>
+                            <div class="bg-purple-50 border-2 border-purple-200 rounded-2xl p-4 text-center">
+                                <div class="text-xs font-bold text-purple-600 mb-1">已解鎖特別獎勵</div>
+                                <div class="text-3xl font-black text-purple-600">${rewards.filter(r => r.unlocked).length} / 4</div>
+                            </div>
+                            <div class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-4 text-center">
+                                <div class="text-xs font-bold text-emerald-600 mb-1">攻擊命中率</div>
+                                <div class="text-3xl font-black text-emerald-600">${accuracy}%</div>
+                            </div>
+                        </div>
+
+                        <!-- Unlocked Rewards Showcase -->
+                        <div class="bg-amber-50/90 border-2 border-amber-300 rounded-2xl p-4">
+                            <div class="text-sm font-black text-amber-900 mb-2">🎁 戰利品收藏櫃（30分 / 50分 / 70分 / 100分）：</div>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                                ${rewards.map(r => `
+                                    <div class="p-3 rounded-xl border-2 flex flex-col items-center text-center ${r.unlocked ? 'bg-white border-amber-400 shadow-sm' : 'bg-slate-100 border-slate-200 opacity-50'}">
+                                        <span class="text-3xl mb-1">${r.unlocked ? r.icon : '🔒'}</span>
+                                        <span class="text-xs font-black text-slate-800">${r.name}</span>
+                                        <span class="text-[11px] font-bold ${r.unlocked ? 'text-emerald-600' : 'text-slate-400'}">${r.unlocked ? '✔ 已解鎖' : `差 ${r.pt - st.score} 分`}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+
+                    this.renderMistakesList(st.mistakes);
+                } else {
+                    // Battle Mode Podium & Tabs
+                    const players = [...this.battleState.players].sort((a, b) => b.score - a.score);
+                    document.getElementById('report-title').textContent = `🏆 ${this.battleState.playerCount}人對戰總成績表`;
+                    document.getElementById('report-subtitle').textContent = '1分鐘限時賽結束！點擊下方各隊按鈕查看個人錯題回饋！';
+
+                    const medals = ['🥇 冠軍', '🥈 亞軍', '🥉 季軍', '🏅 殿軍'];
+                    summaryContainer.innerHTML = `
+                        <div class="grid grid-cols-1 sm:grid-cols-${this.battleState.playerCount} gap-3">
+                            ${players.map((pl, rankIdx) => `
+                                <div class="bg-white rounded-2xl p-4 border-4 ${pl.theme.border} shadow-md flex flex-col items-center text-center relative">
+                                    <span class="bg-amber-100 text-amber-800 font-black text-xs px-3 py-0.5 rounded-full border border-amber-300 mb-1">
+                                        ${medals[rankIdx]}
+                                    </span>
+                                    <div class="text-4xl my-1">${pl.theme.avatar}</div>
+                                    <div class="font-black text-slate-800 text-base">${pl.theme.name}</div>
+                                    <div class="text-2xl font-black text-amber-500 my-1">⭐ ${pl.score} 分</div>
+                                    <div class="text-xs text-slate-500 font-bold space-y-0.5">
+                                        <div>基礎題：${pl.standardCompleted} / 10 題</div>
+                                        <div class="text-purple-600">挑戰題：${pl.challengeCompleted} 題</div>
+                                        <div class="text-rose-500">錯題：${pl.mistakes.length} 題</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+
+                    // Render Player Mistake Tabs
+                    tabsContainer.classList.remove('hidden');
+                    tabsContainer.innerHTML = this.battleState.players.map((pl, idx) => `
+                        <button onclick="app.selectBattleReportTab(${idx})" id="report-tab-${idx}" class="btn-cute-sm px-4 py-2 rounded-2xl font-black text-xs sm:text-sm border-2 flex items-center gap-1.5 ${idx === 0 ? 'bg-rose-500 text-white border-rose-600' : 'bg-white text-slate-700 border-slate-300'}">
+                            <span>${pl.theme.avatar}</span>
+                            <span>${pl.theme.name} 錯題 (${pl.mistakes.length})</span>
+                        </button>
+                    `).join('');
+
+                    this.selectBattleReportTab(0);
+                }
+            }
+
+            selectBattleReportTab(playerIdx) {
+                soundFX.playPop();
+                this.battleState.players.forEach((pl, idx) => {
+                    const btn = document.getElementById(`report-tab-${idx}`);
+                    if (!btn) return;
+                    if (idx === playerIdx) {
+                        btn.className = 'btn-cute-sm px-4 py-2 rounded-2xl font-black text-xs sm:text-sm border-2 flex items-center gap-1.5 bg-rose-500 text-white border-rose-600';
+                    } else {
+                        btn.className = 'btn-cute-sm px-4 py-2 rounded-2xl font-black text-xs sm:text-sm border-2 flex items-center gap-1.5 bg-white text-slate-700 border-slate-300';
+                    }
+                });
+                const targetPlayer = this.battleState.players[playerIdx];
+                if (targetPlayer) {
+                    this.renderMistakesList(targetPlayer.mistakes);
+                }
+            }
+
+            renderMistakesList(mistakes) {
+                const countEl = document.getElementById('report-mistake-count');
+                const listEl = document.getElementById('report-mistakes-list');
+                countEl.textContent = `${mistakes.length} 題需溫習`;
+
+                if (mistakes.length === 0) {
+                    listEl.innerHTML = `
+                        <div class="bg-white rounded-2xl p-6 text-center border-2 border-emerald-200">
+                            <div class="text-4xl mb-2">🌟👏🌟</div>
+                            <div class="text-lg font-black text-emerald-600">全對零錯題！非常厲害！</div>
+                            <p class="text-xs text-slate-500 font-bold mt-1">所有加數題目都順利答對了，繼續保持喔！</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                listEl.innerHTML = mistakes.map((m, i) => {
+                    const circlesA = Array(m.a).fill(`<span class="inline-flex flex-col items-center"><span class="text-base">${m.item.emoji}</span><span class="w-4 h-4 rounded-full border-2 border-pink-500 bg-pink-100 inline-block"></span></span>`).join('');
+                    const circlesB = Array(m.b).fill(`<span class="inline-flex flex-col items-center"><span class="text-base">${m.item.emoji}</span><span class="w-4 h-4 rounded-full border-2 border-sky-500 bg-sky-100 inline-block"></span></span>`).join('');
+
+                    return `
+                        <div class="bg-white rounded-2xl p-3.5 sm:p-4 border-2 border-rose-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                <span class="w-8 h-8 rounded-xl bg-rose-100 text-rose-600 font-black text-sm flex items-center justify-center">
+                                    #${i + 1}
+                                </span>
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xl font-black text-slate-800">
+                                            <span class="text-pink-500">${m.a}</span> + <span class="text-sky-500">${m.b}</span> = <span class="text-emerald-600">${m.sum}</span>
+                                        </span>
+                                        ${m.isChallenge ? '<span class="bg-purple-100 text-purple-700 text-[10px] font-black px-2 py-0.5 rounded-full">挑戰題</span>' : ''}
+                                    </div>
+                                    <div class="text-xs font-bold text-slate-500 mt-0.5">
+                                        當時作答：<span class="text-rose-500 line-through font-black">${m.userAns}</span>
+                                        <span class="mx-1">•</span>
+                                        正確答案：<span class="text-emerald-600 font-black">${m.sum}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Visual Circle Breakdown -->
+                            <div class="flex flex-wrap items-center gap-1.5 bg-amber-50/80 px-3 py-2 rounded-xl border border-amber-200 w-full sm:w-auto justify-center">
+                                <div class="flex items-center gap-1">${circlesA}</div>
+                                <span class="font-black text-amber-500 mx-1">+</span>
+                                <div class="flex items-center gap-1">${circlesB}</div>
+                                <span class="font-black text-emerald-600 ml-1">= 共 ${m.sum} 個圈</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // =========================================================================
+            // FLOATING FEEDBACK OVERLAY
+            // =========================================================================
+            showFloatingFeedback(isCorrect, message) {
+                const overlay = document.getElementById('feedback-overlay');
+                const badge = document.getElementById('feedback-badge');
+                const emoji = document.getElementById('feedback-emoji');
+                const text = document.getElementById('feedback-text');
+
+                if (isCorrect) {
+                    badge.className = 'bg-white/95 border-4 border-emerald-400 rounded-3xl px-8 py-6 shadow-2xl flex flex-col items-center animate-bounce-in';
+                    emoji.textContent = '🌟';
+                    text.className = 'text-2xl font-black text-emerald-600';
+                } else {
+                    badge.className = 'bg-white/95 border-4 border-rose-400 rounded-3xl px-8 py-6 shadow-2xl flex flex-col items-center animate-shake';
+                    emoji.textContent = '💡';
+                    text.className = 'text-2xl font-black text-rose-600';
+                }
+                text.textContent = message;
+
+                overlay.classList.remove('hidden');
+                overlay.classList.add('flex');
+
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    overlay.classList.remove('flex');
+                }, 600);
+            }
+        }
+
+        // Initialize App Immediately and on Load
+        const app = new AdditionAdventureApp();
+        window.app = app;
+        window.soundFX = soundFX;
+    </script>
+</body>
+</html>
