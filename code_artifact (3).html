@@ -1,0 +1,2559 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>加法冒險 - K3 幼兒數學互動教室</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&display=swap');
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        html, body {
+            font-family: 'Noto Sans TC', 'PingFang HK', 'Microsoft JhengHei', sans-serif;
+            background-color: #FFFDF7;
+            background-image: radial-gradient(#FBCFE8 1.5px, transparent 1.5px), radial-gradient(#BAE6FD 1.5px, #FFFDF7 1.5px);
+            background-size: 36px 36px;
+            background-position: 0 0, 18px 18px;
+            overscroll-behavior: none;
+            margin: 0;
+            padding: 0;
+        }
+        canvas {
+            touch-action: none;
+        }
+        .canvas-grid {
+            background-image: radial-gradient(#CBD5E1 1.5px, transparent 1.5px);
+            background-size: 22px 22px;
+        }
+        .btn-cute {
+            transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.12s ease;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.16);
+        }
+        .btn-cute:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.16);
+        }
+        .btn-cute-sm {
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.14);
+        }
+        .btn-cute-sm:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 rgba(0,0,0,0.14);
+        }
+        @keyframes monsterFloat {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-6px) scale(1.04); }
+        }
+        .monster-idle {
+            animation: monsterFloat 2.4s ease-in-out infinite;
+        }
+        @keyframes monsterHitShake {
+            0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); filter: brightness(1); }
+            20% { transform: translate(-14px, -6px) rotate(-10deg) scale(1.15); filter: brightness(2) saturate(2); }
+            40% { transform: translate(14px, 6px) rotate(10deg) scale(0.9); filter: invert(0.8); }
+            60% { transform: translate(-10px, 4px) rotate(-8deg) scale(1.1); }
+            80% { transform: translate(10px, -4px) rotate(8deg) scale(0.95); }
+        }
+        .monster-hit {
+            animation: monsterHitShake 0.65s ease-in-out;
+        }
+        @media print {
+            body {
+                background: #FFFFFF !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            #screen-worksheet {
+                display: block !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            #worksheet-paper {
+                box-shadow: none !important;
+                border: none !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 8mm !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-slate-800">
+
+    <!-- ================= 頂部導覽列 ================= -->
+    <header class="no-print bg-white/95 backdrop-blur border-b-4 border-pink-300 px-3 py-2.5 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+            <!-- Brand & Home -->
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="if(window.app)window.app.showHome()" class="btn-cute-sm bg-pink-500 hover:bg-pink-600 text-white font-black px-4 py-2 rounded-2xl flex items-center gap-2 text-base sm:text-xl cursor-pointer">
+                    <i class="fa-solid fa-house"></i>
+                    <span>主頁</span>
+                </button>
+                <div class="flex items-center gap-1.5 bg-amber-100 border-2 border-amber-300 px-3.5 py-1.5 rounded-2xl">
+                    <span id="nav-hero-icon" class="text-2xl">🧙‍♂️</span>
+                    <span class="font-black text-amber-900 text-lg sm:text-xl">加法冒險</span>
+                </div>
+            </div>
+
+            <!-- Tool Switcher (點圈 / 畫圈 / 斜線) -->
+            <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl border-2 border-slate-300">
+                <button id="nav-tool-stamp" type="button" onclick="if(window.app)window.app.setToolMode('stamp')" class="px-3 py-1.5 rounded-xl font-black text-sm sm:text-lg bg-amber-500 text-white shadow cursor-pointer flex items-center gap-1">
+                    <span>⭕ 點圈</span>
+                </button>
+                <button id="nav-tool-draw" type="button" onclick="if(window.app)window.app.setToolMode('draw')" class="px-3 py-1.5 rounded-xl font-black text-sm sm:text-lg text-slate-600 hover:bg-white cursor-pointer flex items-center gap-1">
+                    <span>🖍️ 畫圈</span>
+                </button>
+                <button id="nav-tool-slash" type="button" onclick="if(window.app)window.app.setToolMode('slash')" class="px-3 py-1.5 rounded-xl font-black text-sm sm:text-lg text-slate-600 hover:bg-white cursor-pointer flex items-center gap-1">
+                    <span>📏 斜線 ／</span>
+                </button>
+            </div>
+
+            <!-- Right Utilities -->
+            <div class="flex items-center gap-1.5">
+                <button type="button" onclick="if(window.app)window.app.openMistakeBankModal()" class="btn-cute-sm bg-rose-100 hover:bg-rose-200 text-rose-800 border-2 border-rose-300 font-black px-3 py-1.5 rounded-xl text-sm sm:text-lg flex items-center gap-1 cursor-pointer">
+                    <span>📖 錯題庫</span>
+                    <span id="nav-mistake-badge" class="bg-rose-600 text-white text-xs sm:text-sm px-2 py-0.5 rounded-full">0</span>
+                </button>
+                <button type="button" onclick="if(window.app)window.app.openWorksheetGenerator()" class="btn-cute-sm bg-indigo-100 hover:bg-indigo-200 text-indigo-800 border-2 border-indigo-300 font-black px-3 py-1.5 rounded-xl text-sm sm:text-lg flex items-center gap-1 cursor-pointer">
+                    <i class="fa-solid fa-print"></i>
+                    <span class="hidden sm:inline">6題工作紙</span>
+                </button>
+                <button id="btn-toggle-bgm" type="button" onclick="if(window.app)window.app.toggleBgm()" class="btn-cute-sm bg-purple-100 text-purple-900 border-2 border-purple-400 font-black px-3 py-1.5 rounded-xl text-sm sm:text-lg cursor-pointer">
+                    🎵 魔法音樂: 開
+                </button>
+                <button id="btn-toggle-voice" type="button" onclick="if(window.app)window.app.toggleVoice()" class="btn-cute-sm bg-emerald-100 text-emerald-800 border-2 border-emerald-400 font-black px-3 py-1.5 rounded-xl text-sm sm:text-lg cursor-pointer">
+                    💬 粵語: 開
+                </button>
+                <button id="btn-toggle-sfx" type="button" onclick="if(window.app)window.app.toggleSfx()" class="btn-cute-sm bg-sky-100 text-sky-800 border-2 border-sky-400 font-black px-3 py-1.5 rounded-xl text-sm sm:text-lg cursor-pointer">
+                    🔊 音效: 開
+                </button>
+                <button type="button" onclick="if(window.app)window.app.toggleFullscreen()" class="btn-cute-sm bg-slate-200 hover:bg-slate-300 text-slate-700 font-black px-3 py-1.5 rounded-xl text-sm sm:text-lg cursor-pointer" title="全螢幕">
+                    <i class="fa-solid fa-expand"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ================= 主內容區 ================= -->
+    <main class="flex-1 w-full max-w-7xl mx-auto px-3 py-3 sm:px-5 sm:py-4">
+
+        <!-- ================= 畫面 1：首頁選單 ================= -->
+        <section id="screen-home" class="space-y-5 py-2">
+            <!-- Hero Banner -->
+            <div class="bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-600 rounded-3xl p-5 sm:p-7 text-white shadow-xl border-4 border-amber-300 flex flex-col md:flex-row items-center justify-between gap-5">
+                <div class="space-y-2 text-center md:text-left">
+                    <div class="inline-flex items-center gap-2 bg-white/20 px-4 py-1 rounded-full text-sm sm:text-lg font-black">
+                        <span>⚡ 魔法數學學院・K3 互動電子白板 & iPad</span>
+                    </div>
+                    <h1 class="text-4xl sm:text-6xl font-black tracking-tight drop-shadow">✨ 加法冒險 ✨</h1>
+                    <p class="text-base sm:text-xl font-bold text-amber-100">
+                        畫出正確數量的圈圈解開魔法鎖，發射魔杖光芒擊敗怪獸！
+                    </p>
+                </div>
+                <div class="flex items-center gap-4 bg-white/15 p-4 rounded-3xl border-2 border-white/30 shrink-0">
+                    <div id="home-banner-hero" class="text-6xl sm:text-7xl monster-idle">🧙‍♂️</div>
+                    <div class="text-3xl font-black text-amber-300">⚡VS⚡</div>
+                    <div id="home-banner-monster" class="text-6xl sm:text-7xl monster-idle">👾</div>
+                </div>
+            </div>
+
+            <!-- Character & Monster Difficulty Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                <!-- 1. 選擇角色 -->
+                <div class="lg:col-span-5 bg-white rounded-3xl p-4 sm:p-5 border-4 border-amber-300 shadow-md flex flex-col justify-between">
+                    <div class="font-black text-xl sm:text-2xl text-amber-800 mb-3 flex items-center justify-between">
+                        <span>🧙‍♂️ 1. 選擇你的冒險角色：</span>
+                        <span id="selected-hero-label" class="text-sm sm:text-base bg-amber-100 text-amber-900 px-3 py-1 rounded-full border border-amber-300">小魔法師</span>
+                    </div>
+                    <div class="grid grid-cols-4 gap-2.5">
+                        <button id="hero-btn-0" type="button" onclick="if(window.app)window.app.selectCharacter(0)" class="btn-cute-sm p-3 rounded-2xl border-4 border-amber-500 bg-amber-50 flex flex-col items-center cursor-pointer">
+                            <span class="text-4xl sm:text-5xl mb-1">🧙‍♂️</span>
+                            <span class="font-black text-xs sm:text-base text-slate-800">小魔法師</span>
+                        </button>
+                        <button id="hero-btn-1" type="button" onclick="if(window.app)window.app.selectCharacter(1)" class="btn-cute-sm p-3 rounded-2xl border-4 border-slate-200 bg-white hover:bg-amber-50/40 flex flex-col items-center cursor-pointer">
+                            <span class="text-4xl sm:text-5xl mb-1">🧚‍♀️</span>
+                            <span class="font-black text-xs sm:text-base text-slate-800">仙子精靈</span>
+                        </button>
+                        <button id="hero-btn-2" type="button" onclick="if(window.app)window.app.selectCharacter(2)" class="btn-cute-sm p-3 rounded-2xl border-4 border-slate-200 bg-white hover:bg-amber-50/40 flex flex-col items-center cursor-pointer">
+                            <span class="text-4xl sm:text-5xl mb-1">🦸‍♂️</span>
+                            <span class="font-black text-xs sm:text-base text-slate-800">超人勇者</span>
+                        </button>
+                        <button id="hero-btn-3" type="button" onclick="if(window.app)window.app.selectCharacter(3)" class="btn-cute-sm p-3 rounded-2xl border-4 border-slate-200 bg-white hover:bg-amber-50/40 flex flex-col items-center cursor-pointer">
+                            <span class="text-4xl sm:text-5xl mb-1">🐱</span>
+                            <span class="font-black text-xs sm:text-base text-slate-800">魔法喵喵</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 2. 怪獸難度 -->
+                <div class="lg:col-span-7 bg-white rounded-3xl p-4 sm:p-5 border-4 border-pink-300 shadow-md flex flex-col justify-between">
+                    <div class="font-black text-xl sm:text-2xl text-pink-700 mb-3 flex items-center justify-between">
+                        <span>👾 2. 選擇怪獸難度（不同怪獸代表不同難度）：</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3">
+                        <button id="monster-tier-easy" type="button" onclick="if(window.app)window.app.selectMonsterTier('easy')" class="btn-cute p-3.5 rounded-2xl border-4 border-emerald-500 bg-emerald-50 text-emerald-950 flex flex-col items-center text-center cursor-pointer">
+                            <span class="text-4xl sm:text-5xl mb-1">👾</span>
+                            <span class="font-black text-base sm:text-xl">🟢 簡單：果凍怪</span>
+                            <span class="text-xs sm:text-sm font-black bg-emerald-500 text-white px-2.5 py-0.5 rounded-full mt-1">10題・10以內</span>
+                        </button>
+                        <button id="monster-tier-medium" type="button" onclick="if(window.app)window.app.selectMonsterTier('medium')" class="btn-cute p-3.5 rounded-2xl border-4 border-slate-200 bg-white hover:bg-amber-50 text-slate-800 flex flex-col items-center text-center cursor-pointer">
+                            <span class="text-4xl sm:text-5xl mb-1">👹</span>
+                            <span class="font-black text-base sm:text-xl">🟡 進階：獨眼龍</span>
+                            <span class="text-xs sm:text-sm font-black bg-amber-500 text-white px-2.5 py-0.5 rounded-full mt-1">30題・15以內</span>
+                        </button>
+                        <button id="monster-tier-hard" type="button" onclick="if(window.app)window.app.selectMonsterTier('hard')" class="btn-cute p-3.5 rounded-2xl border-4 border-slate-200 bg-white hover:bg-rose-50 text-slate-800 flex flex-col items-center text-center cursor-pointer">
+                            <span class="text-4xl sm:text-5xl mb-1">🐉</span>
+                            <span class="font-black text-base sm:text-xl">🔴 困難：暗黑魔龍</span>
+                            <span class="text-xs sm:text-sm font-black bg-rose-600 text-white px-2.5 py-0.5 rounded-full mt-1">50題以上・20以內</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question Type & Drawing Tool -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div class="bg-white rounded-3xl p-4 sm:p-5 border-4 border-emerald-300 shadow-md flex flex-col justify-between">
+                    <div class="font-black text-xl sm:text-2xl text-emerald-700 mb-3 flex items-center gap-2">
+                        <span>🧩 3. 選擇題型模式（畫圖正確才可去下一頁）：</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2.5">
+                        <button id="home-qtype-standard" type="button" onclick="if(window.app)window.app.setSoloQuestionType('standard')" class="btn-cute-sm py-3.5 px-2 rounded-2xl font-black text-base sm:text-xl bg-sky-500 text-white border-2 border-sky-600 cursor-pointer">
+                            🎨 正常題<br><span class="text-xs sm:text-sm font-bold">(分3界面畫圈)</span>
+                        </button>
+                        <button id="home-qtype-basic" type="button" onclick="if(window.app)window.app.setSoloQuestionType('basic_grid')" class="btn-cute-sm py-3.5 px-2 rounded-2xl font-black text-base sm:text-xl bg-emerald-50 text-emerald-800 border-2 border-emerald-300 cursor-pointer">
+                            🌱 輔助基礎題<br><span class="text-xs sm:text-sm font-bold">(1格1圈・帶+號)</span>
+                        </button>
+                        <button id="home-qtype-count3" type="button" onclick="if(window.app)window.app.setSoloQuestionType('count_by_3')" class="btn-cute-sm py-3.5 px-2 rounded-2xl font-black text-base sm:text-xl bg-amber-50 text-amber-800 border-2 border-amber-300 cursor-pointer">
+                            🐣 3個一數<br><span class="text-xs sm:text-sm font-bold">(初能力選擇)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-3xl p-4 sm:p-5 border-4 border-sky-300 shadow-md flex flex-col justify-between">
+                    <div class="font-black text-xl sm:text-2xl text-sky-700 mb-3 flex items-center gap-2">
+                        <span>🖌️ 4. 選擇畫圖工具：</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2.5">
+                        <button id="home-tool-stamp" type="button" onclick="if(window.app)window.app.setToolMode('stamp')" class="btn-cute-sm py-3.5 px-2 rounded-2xl font-black text-base sm:text-xl bg-amber-500 text-white border-2 border-amber-600 cursor-pointer">
+                            ⭕ 點圈模式<br><span class="text-xs sm:text-sm font-bold">(輕點出圈)</span>
+                        </button>
+                        <button id="home-tool-draw" type="button" onclick="if(window.app)window.app.setToolMode('draw')" class="btn-cute-sm py-3.5 px-2 rounded-2xl font-black text-base sm:text-xl bg-amber-50 text-amber-900 border-2 border-amber-300 cursor-pointer">
+                            🖍️ 畫圈模式<br><span class="text-xs sm:text-sm font-bold">(手繪畫圈)</span>
+                        </button>
+                        <button id="home-tool-slash" type="button" onclick="if(window.app)window.app.setToolMode('slash')" class="btn-cute-sm py-3.5 px-2 rounded-2xl font-black text-base sm:text-xl bg-amber-50 text-amber-900 border-2 border-amber-300 cursor-pointer">
+                            📏 斜線模式<br><span class="text-xs sm:text-sm font-bold">(畫斜線／)</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mode Launch Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white rounded-3xl p-5 border-4 border-pink-400 shadow-xl flex flex-col justify-between">
+                    <div class="space-y-2">
+                        <div class="inline-block bg-pink-100 text-pink-700 font-black px-3 py-1 rounded-full text-sm">個人闖關模式</div>
+                        <h2 class="text-2xl sm:text-3xl font-black text-slate-800">⚔️ 開始加法冒險</h2>
+                        <p class="text-sm sm:text-base font-bold text-slate-600">
+                            畫圖數量必須完全正確才可進下一界面！擊敗所選難度怪獸（10題 / 30題 / 50題以上）！
+                        </p>
+                    </div>
+                    <button type="button" onclick="if(window.app)window.app.startSoloMode(false)" class="mt-4 btn-cute w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white font-black text-xl sm:text-2xl py-4 rounded-2xl cursor-pointer">
+                        🚀 出發冒險！
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-3xl p-5 border-4 border-sky-400 shadow-xl flex flex-col justify-between">
+                    <div class="space-y-2">
+                        <div class="inline-block bg-sky-100 text-sky-700 font-black px-3 py-1 rounded-full text-sm">同屏競賽模式</div>
+                        <h2 class="text-2xl sm:text-3xl font-black text-slate-800">🏆 1分鐘對戰</h2>
+                        <p class="text-sm sm:text-base font-bold text-slate-600">
+                            限時 1 分鐘・10 題！提早完成自動入數字鍵盤挑戰題，支援電子白板多點觸控！
+                        </p>
+                    </div>
+                    <div class="mt-4 grid grid-cols-2 gap-2.5">
+                        <button type="button" onclick="if(window.app)window.app.startBattleMode(2)" class="btn-cute bg-sky-500 text-white font-black text-lg sm:text-xl py-4 rounded-2xl cursor-pointer">
+                            👦👧 2人對戰
+                        </button>
+                        <button type="button" onclick="if(window.app)window.app.startBattleMode(4)" class="btn-cute bg-indigo-500 text-white font-black text-lg sm:text-xl py-4 rounded-2xl cursor-pointer">
+                            👨‍👩‍👧‍👦 4人對戰
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-3xl p-5 border-4 border-rose-400 shadow-xl flex flex-col justify-between">
+                    <div class="space-y-2">
+                        <div class="inline-block bg-rose-100 text-rose-700 font-black px-3 py-1 rounded-full text-sm">弱項重練模式</div>
+                        <h2 class="text-2xl sm:text-3xl font-black text-slate-800">📖 專屬錯題庫</h2>
+                        <p class="text-sm sm:text-base font-bold text-slate-600">
+                            自動收集答錯的算式，提供圖片數數提示與重練消滅錯題！目前已收集 <span id="home-mistake-count" class="text-rose-600 font-black text-xl">0</span> 題。
+                        </p>
+                    </div>
+                    <button type="button" onclick="if(window.app)window.app.openMistakeBankModal()" class="mt-4 btn-cute w-full bg-rose-500 text-white font-black text-lg sm:text-xl py-4 rounded-2xl cursor-pointer">
+                        📖 查看錯題庫
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-3xl p-5 border-4 border-emerald-400 shadow-xl flex flex-col justify-between">
+                    <div class="space-y-2">
+                        <div class="inline-block bg-emerald-100 text-emerald-700 font-black px-3 py-1 rounded-full text-sm">紙本延伸 (6題放大版)</div>
+                        <h2 class="text-2xl sm:text-3xl font-black text-slate-800">🖨️ 生成相應工作紙</h2>
+                        <p class="text-sm sm:text-base font-bold text-slate-600">
+                            全頁精選 6 題！配備超寬敞「一個大格仔畫出算式」畫圖區，方便幼兒動筆畫圈！
+                        </p>
+                    </div>
+                    <button type="button" onclick="if(window.app)window.app.openWorksheetGenerator()" class="mt-4 btn-cute w-full bg-emerald-500 text-white font-black text-xl sm:text-2xl py-4 rounded-2xl cursor-pointer">
+                        🖨️ 生成 6 題工作紙
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 畫面 2：個人練習（加法冒險 + 分3個界面） ================= -->
+        <section id="screen-solo" class="hidden space-y-3">
+            <!-- Top Monster & Hero Status Bar -->
+            <div class="bg-gradient-to-r from-indigo-900 via-purple-900 to-fuchsia-900 rounded-3xl p-3.5 sm:p-5 text-white shadow-xl border-4 border-amber-300">
+                <div class="flex flex-col lg:flex-row items-center justify-between gap-3">
+                    <div class="flex items-center gap-3 w-full lg:w-auto justify-center lg:justify-start">
+                        <div class="bg-white/15 border-2 border-amber-300 px-3.5 py-2 rounded-2xl flex items-center gap-2">
+                            <span id="solo-hero-avatar" class="text-4xl sm:text-5xl">🧙‍♂️</span>
+                            <div>
+                                <div id="solo-hero-name" class="text-xs sm:text-sm font-black text-amber-200">小魔法師</div>
+                                <div class="text-lg sm:text-2xl font-black">第 <span id="solo-q-num" class="text-amber-300">1</span> 題</div>
+                            </div>
+                        </div>
+                        <div class="bg-amber-400 text-slate-900 border-2 border-white px-5 py-2 rounded-2xl flex items-center gap-2.5 shadow-md">
+                            <span class="text-3xl sm:text-4xl">⚡</span>
+                            <div>
+                                <div class="text-xs sm:text-sm font-black">冒險進度 (答對扣1HP)</div>
+                                <div class="text-2xl sm:text-4xl font-black leading-none"><span id="solo-score">0</span> / <span id="solo-target-q">10</span> 題</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-4 bg-white text-slate-800 px-4 py-2.5 rounded-3xl border-4 border-amber-400 shadow-lg w-full lg:w-auto max-w-xl">
+                        <div class="relative bg-gradient-to-b from-purple-100 to-pink-100 w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border-3 border-purple-300 flex items-center justify-center shrink-0">
+                            <span id="solo-monster-level-badge" class="absolute -top-2 -right-2 bg-emerald-600 text-white text-xs sm:text-sm font-black px-2.5 py-0.5 rounded-full shadow">簡單・10題</span>
+                            <div id="solo-monster-avatar" class="text-5xl sm:text-6xl monster-idle select-none">👾</div>
+                        </div>
+                        <div class="flex-1 min-w-[200px]">
+                            <div class="flex items-center justify-between gap-2 mb-1">
+                                <span id="solo-monster-name" class="text-xl sm:text-3xl font-black text-purple-900">果凍噗噗怪</span>
+                                <span class="bg-rose-100 text-rose-700 text-xs sm:text-base font-black px-2.5 py-0.5 rounded-full border border-rose-300">💥 答對 -1 HP</span>
+                            </div>
+                            <div id="solo-monster-hp-text" class="text-sm sm:text-lg font-black text-rose-600 mb-1">
+                                怪獸剩餘 HP: 10 / 10 (目標 10 題)
+                            </div>
+                            <div class="w-full h-7 sm:h-8 bg-slate-800 rounded-full overflow-hidden p-1 relative shadow-inner">
+                                <div id="solo-monster-hp-bar" class="h-full bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-400 rounded-full transition-all duration-500" style="width: 100%;"></div>
+                                <div id="solo-monster-hp-bar-label" class="absolute inset-0 flex items-center justify-center text-xs sm:text-base font-black text-white drop-shadow">
+                                    ❤️ 10 / 10 HP (100%)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 w-full lg:w-auto justify-center lg:justify-end">
+                        <div class="bg-white/10 border-2 border-white/25 p-2 rounded-2xl">
+                            <div class="text-xs font-black text-amber-200 mb-1 text-center">切換怪獸難度</div>
+                            <div class="grid grid-cols-3 gap-1.5">
+                                <button id="badge-tier-easy" type="button" onclick="if(window.app)window.app.selectMonsterTier('easy')" class="px-2.5 py-1 rounded-xl bg-amber-400 text-slate-900 border border-white text-center cursor-pointer font-black text-xs shadow">
+                                    👾簡單<br>10題
+                                </button>
+                                <button id="badge-tier-medium" type="button" onclick="if(window.app)window.app.selectMonsterTier('medium')" class="px-2.5 py-1 rounded-xl bg-slate-800/80 text-slate-300 text-center cursor-pointer font-black text-xs">
+                                    👹進階<br>30題
+                                </button>
+                                <button id="badge-tier-hard" type="button" onclick="if(window.app)window.app.selectMonsterTier('hard')" class="px-2.5 py-1 rounded-xl bg-slate-800/80 text-slate-300 text-center cursor-pointer font-black text-xs">
+                                    🐉困難<br>50題+
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" onclick="if(window.app)window.app.openSoloReportModal()" class="btn-cute-sm bg-rose-500 hover:bg-rose-600 text-white font-black px-4 py-3 rounded-2xl text-base sm:text-xl flex flex-col items-center justify-center cursor-pointer border-2 border-white shrink-0">
+                            <i class="fa-solid fa-clipboard-list text-xl"></i>
+                            <span>成績表</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mistake Drill Active Banner -->
+            <div id="solo-mistake-drill-banner" class="hidden bg-rose-600 text-white rounded-2xl px-4 py-2.5 font-black text-base sm:text-xl flex items-center justify-between shadow">
+                <div class="flex items-center gap-2">
+                    <span>🔥 錯題重練特訓模式：答對即可將錯題從錯題庫消滅！</span>
+                    <span id="solo-mistake-drill-remaining" class="bg-white text-rose-700 px-3 py-0.5 rounded-full text-sm sm:text-base">剩餘 0 題</span>
+                </div>
+                <button type="button" onclick="if(window.app)window.app.exitMistakeDrill()" class="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-xl text-sm sm:text-base cursor-pointer">返回一般題目</button>
+            </div>
+
+            <!-- Question Type Quick Switcher Bar -->
+            <div class="flex flex-wrap items-center justify-between gap-2 bg-white rounded-2xl px-4 py-2.5 border-2 border-slate-200 shadow-sm">
+                <div class="flex items-center gap-2 font-black text-slate-700 text-base sm:text-xl">
+                    <span>🧩 題型模式：</span>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button id="qtype-standard" type="button" onclick="if(window.app)window.app.setSoloQuestionType('standard')" class="px-4 py-2 rounded-xl font-black text-sm sm:text-xl transition-all flex items-center gap-1.5 bg-sky-500 text-white shadow-md cursor-pointer">
+                        <span>🎨 正常題 (分3界面畫圈)</span>
+                    </button>
+                    <button id="qtype-basic" type="button" onclick="if(window.app)window.app.setSoloQuestionType('basic_grid')" class="px-4 py-2 rounded-xl font-black text-sm sm:text-xl transition-all flex items-center gap-1.5 text-slate-600 hover:bg-slate-200 cursor-pointer">
+                        <span>🌱 基礎題：一一對應 (1格1圖)</span>
+                    </button>
+                    <button id="qtype-count3" type="button" onclick="if(window.app)window.app.setSoloQuestionType('count_by_3')" class="px-4 py-2 rounded-xl font-black text-sm sm:text-xl transition-all flex items-center gap-1.5 text-slate-600 hover:bg-slate-200 cursor-pointer">
+                        <span>🐣 基礎題：三個一數 (選擇題)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3-Screen Stepper Bar -->
+            <div id="solo-3step-bar" class="bg-white rounded-2xl p-2.5 border-4 border-pink-200 shadow-md flex items-center justify-between gap-2">
+                <button id="step-tab-1" type="button" onclick="if(window.app)window.app.goToSoloStep(1)" class="flex-1 py-2.5 px-3 rounded-xl font-black text-base sm:text-xl flex items-center justify-center gap-2 bg-pink-500 text-white shadow cursor-pointer transition-all">
+                    <span class="w-7 h-7 rounded-full bg-white text-pink-600 flex items-center justify-center text-base font-black">1</span>
+                    <span>界面1：畫第 1 個數</span>
+                </button>
+                <span class="text-slate-300 font-black text-xl">➔</span>
+                <button id="step-tab-2" type="button" onclick="if(window.app)window.app.goToSoloStep(2)" class="flex-1 py-2.5 px-3 rounded-xl font-black text-base sm:text-xl flex items-center justify-center gap-2 bg-slate-100 text-slate-500 cursor-pointer transition-all">
+                    <span class="w-7 h-7 rounded-full bg-white text-slate-600 flex items-center justify-center text-base font-black">2</span>
+                    <span>界面2：畫第 2 個數</span>
+                </button>
+                <span class="text-slate-300 font-black text-xl">➔</span>
+                <button id="step-tab-3" type="button" onclick="if(window.app)window.app.goToSoloStep(3)" class="flex-1 py-2.5 px-3 rounded-xl font-black text-base sm:text-xl flex items-center justify-center gap-2 bg-slate-100 text-slate-500 cursor-pointer transition-all">
+                    <span class="w-7 h-7 rounded-full bg-white text-slate-600 flex items-center justify-center text-base font-black">3</span>
+                    <span>界面3：合共選答案</span>
+                </button>
+            </div>
+
+            <!-- 界面 1 & 2：畫圈區 -->
+            <div id="solo-step1-panel" class="bg-white rounded-3xl p-4 sm:p-6 border-4 border-pink-300 shadow-xl relative transition-all">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-3 border-b-2 border-pink-100">
+                    <div class="flex flex-wrap items-center gap-2.5">
+                        <span id="solo-step-badge" class="bg-pink-500 text-white font-black text-lg sm:text-2xl px-5 py-2 rounded-full shadow-sm flex items-center gap-2">
+                            <span>📝 界面 1：請畫出第 1 個數的圈圈</span>
+                        </span>
+                        <span id="solo-mode-badge" class="bg-amber-500 text-white text-base sm:text-xl font-black px-4 py-1.5 rounded-full shadow-sm">
+                            ⭕ 點圈模式
+                        </span>
+                        <span id="solo-step1-hint" class="text-lg sm:text-2xl font-black text-slate-800">
+                            (請畫圈圈)
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-2.5">
+                        <button type="button" onclick="if(window.app)window.app.speakCurrentQuestion()" class="btn-cute-sm bg-emerald-100 hover:bg-emerald-200 text-emerald-800 border-2 border-emerald-400 text-base sm:text-xl font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-volume-high"></i>
+                            <span>粵語讀題</span>
+                        </button>
+                        <button type="button" onclick="if(window.app)window.app.clearAllSoloCanvases()" class="btn-cute-sm bg-rose-100 hover:bg-rose-200 text-rose-700 border-2 border-rose-300 text-base sm:text-xl font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-eraser"></i>
+                            <span>全部重畫</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-center gap-3 sm:gap-5 mb-4 bg-amber-50/80 py-2.5 px-4 rounded-2xl border-2 border-amber-200">
+                    <span class="text-base sm:text-xl font-black text-slate-600">完整算式：</span>
+                    <span id="eq-banner-a" class="px-5 py-1 rounded-xl font-black text-3xl sm:text-5xl bg-pink-500 text-white shadow">2</span>
+                    <span class="font-black text-3xl sm:text-5xl text-amber-500">+</span>
+                    <span id="eq-banner-b" class="px-5 py-1 rounded-xl font-black text-3xl sm:text-5xl bg-sky-100 text-sky-600 border-2 border-sky-300">3</span>
+                    <span class="font-black text-3xl sm:text-5xl text-emerald-500">=</span>
+                    <span class="px-5 py-1 rounded-xl font-black text-3xl sm:text-5xl bg-emerald-50 text-emerald-600 border-2 border-emerald-300">?</span>
+                </div>
+
+                <div id="solo-standard-draw-area" class="w-full max-w-4xl mx-auto">
+                    <div id="solo-subscreen-a" class="flex flex-col items-center w-full">
+                        <div onclick="soundFX.speakNumber(window.app?.soloState?.currentQ?.a || 0)" class="w-full bg-pink-50 border-4 border-pink-300 rounded-2xl py-3 px-6 mb-3 flex items-center justify-between shadow-sm cursor-pointer hover:bg-pink-100 transition-colors">
+                            <div class="flex items-center gap-3">
+                                <span class="bg-pink-500 text-white text-lg sm:text-2xl font-black px-4 py-1.5 rounded-xl">第 1 個數</span>
+                                <span class="text-xl sm:text-3xl font-black text-pink-800">請準確畫出對應數量：</span>
+                            </div>
+                            <span id="solo-num-a" class="text-6xl sm:text-8xl font-black text-pink-600 leading-none">2</span>
+                        </div>
+
+                        <div class="w-full bg-amber-50/60 rounded-3xl p-4 border-2 border-dashed border-pink-300">
+                            <div class="flex items-center justify-between mb-2 px-1">
+                                <span class="text-xl sm:text-2xl font-black text-pink-700">第 1 組畫圖區（畫對數量才可去下一頁）</span>
+                                <span id="solo-count-a" class="bg-pink-500 text-white text-lg sm:text-2xl font-black px-5 py-1 rounded-full shadow-sm">0 / 2 個圈</span>
+                            </div>
+                            <div id="solo-canvas-wrap-a" class="relative w-full h-80 sm:h-96 lg:h-[430px] bg-white rounded-2xl border-4 border-pink-400 canvas-grid overflow-hidden shadow-inner">
+                                <canvas id="solo-canvas-a" class="w-full h-full block"></canvas>
+                                <button type="button" onclick="if(window.app)window.app.clearSingleCanvas('solo', 'a')" class="absolute bottom-3 right-3 bg-pink-100 hover:bg-pink-200 text-pink-800 text-base sm:text-xl font-black px-4 py-2 rounded-xl border-2 border-pink-300 cursor-pointer shadow">
+                                    重畫第1組
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="solo-subscreen-b" class="hidden flex-col items-center w-full">
+                        <div onclick="soundFX.speakNumber(window.app?.soloState?.currentQ?.b || 0)" class="w-full bg-sky-50 border-4 border-sky-300 rounded-2xl py-3 px-6 mb-3 flex items-center justify-between shadow-sm cursor-pointer hover:bg-sky-100 transition-colors">
+                            <div class="flex items-center gap-3">
+                                <span class="bg-sky-500 text-white text-lg sm:text-2xl font-black px-4 py-1.5 rounded-xl">+ 第 2 個數</span>
+                                <span class="text-xl sm:text-3xl font-black text-sky-800">請準確畫出對應數量：</span>
+                            </div>
+                            <span id="solo-num-b" class="text-6xl sm:text-8xl font-black text-sky-600 leading-none">3</span>
+                        </div>
+
+                        <div class="w-full bg-sky-50/60 rounded-3xl p-4 border-2 border-dashed border-sky-300">
+                            <div class="flex items-center justify-between mb-2 px-1">
+                                <span class="text-xl sm:text-2xl font-black text-sky-700">第 2 組畫圖區（畫對數量才可去下一頁）</span>
+                                <span id="solo-count-b" class="bg-sky-500 text-white text-lg sm:text-2xl font-black px-5 py-1 rounded-full shadow-sm">0 / 3 個圈</span>
+                            </div>
+                            <div id="solo-canvas-wrap-b" class="relative w-full h-80 sm:h-96 lg:h-[430px] bg-white rounded-2xl border-4 border-sky-400 canvas-grid overflow-hidden shadow-inner">
+                                <canvas id="solo-canvas-b" class="w-full h-full block"></canvas>
+                                <button type="button" onclick="if(window.app)window.app.clearSingleCanvas('solo', 'b')" class="absolute bottom-3 right-3 bg-sky-100 hover:bg-sky-200 text-sky-800 text-base sm:text-xl font-black px-4 py-2 rounded-xl border-2 border-sky-300 cursor-pointer shadow">
+                                    重畫第2組
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 基礎題一對一格陣 -->
+                <div id="solo-basic-plus-area" class="hidden w-full space-y-3">
+                    <div class="bg-emerald-100 border-2 border-emerald-400 rounded-2xl px-4 py-2 flex flex-wrap items-center justify-between gap-2">
+                        <span class="font-black text-emerald-900 text-base sm:text-xl">
+                            🌱 基礎題輔助模式：可切換「一一對應 (1格1圖)」或「三個一數」
+                        </span>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="if(window.app)window.app.setSoloQuestionType('basic_grid')" class="px-3 py-1 rounded-xl font-black text-sm sm:text-base bg-emerald-600 text-white shadow cursor-pointer">
+                                👆 一一對應 (1格1圖)
+                            </button>
+                            <button type="button" onclick="if(window.app)window.app.setSoloQuestionType('count_by_3')" class="px-3 py-1 rounded-xl font-black text-sm sm:text-base bg-white text-emerald-800 border border-emerald-400 cursor-pointer">
+                                🐣 切換至三個一數
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-11 gap-4 items-center bg-emerald-50/70 p-4 sm:p-5 rounded-3xl border-4 border-emerald-300">
+                        <div class="md:col-span-5 bg-white rounded-2xl border-4 border-pink-400 p-4 shadow">
+                            <div class="flex items-center justify-between mb-3">
+                                <span id="solo-basic-hint-a" class="text-lg sm:text-2xl font-black text-pink-700">第1個數：請點亮 2 格</span>
+                                <button type="button" onclick="if(window.app)window.app.clearSingleCanvas('solo', 'a')" class="bg-pink-100 hover:bg-pink-200 text-pink-800 text-base font-black px-3 py-1 rounded-xl border border-pink-300 cursor-pointer">重設</button>
+                            </div>
+                            <div id="solo-basic-cells-a" class="grid grid-cols-5 gap-2 sm:gap-3"></div>
+                        </div>
+
+                        <div class="md:col-span-1 flex flex-col items-center justify-center py-1">
+                            <div class="w-14 h-14 sm:w-20 sm:h-20 rounded-3xl bg-amber-400 text-white font-black text-4xl sm:text-6xl flex items-center justify-center shadow-lg border-4 border-white">+</div>
+                            <span class="text-xs sm:text-base font-black text-amber-800 mt-1">加號</span>
+                        </div>
+
+                        <div class="md:col-span-5 bg-white rounded-2xl border-4 border-sky-400 p-4 shadow">
+                            <div class="flex items-center justify-between mb-3">
+                                <span id="solo-basic-hint-b" class="text-lg sm:text-2xl font-black text-sky-700">第2個數：請點亮 3 格</span>
+                                <button type="button" onclick="if(window.app)window.app.clearSingleCanvas('solo', 'b')" class="bg-sky-100 hover:bg-sky-200 text-sky-800 text-base font-black px-3 py-1 rounded-xl border border-sky-300 cursor-pointer">重設</button>
+                            </div>
+                            <div id="solo-basic-cells-b" class="grid grid-cols-5 gap-2 sm:gap-3"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3個一數選擇區 -->
+                <div id="solo-countby3-area" class="hidden space-y-5">
+                    <div class="bg-amber-50 border-4 border-amber-300 rounded-3xl p-4 sm:p-6">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                            <span class="text-lg sm:text-2xl font-black text-amber-900">
+                                🐣 基礎題（三個一數）：請依序點擊每一盒（每盒 3 個），跟著讀出 3、6、9...
+                            </span>
+                            <div class="flex items-center gap-2">
+                                <button type="button" onclick="if(window.app)window.app.setSoloQuestionType('basic_grid')" class="px-3 py-1 rounded-xl font-black text-sm sm:text-base bg-white text-amber-900 border border-amber-400 cursor-pointer">
+                                    👆 切換至一一對應
+                                </button>
+                                <span id="solo-count3-progress" class="bg-amber-500 text-white font-black px-4 py-1 rounded-full text-base sm:text-xl">
+                                    已數：0
+                                </span>
+                            </div>
+                        </div>
+                        <div id="solo-count3-groups" class="flex flex-wrap items-center justify-center gap-3 sm:gap-4 py-2"></div>
+                    </div>
+
+                    <div class="bg-emerald-50 border-4 border-emerald-400 rounded-3xl p-4 sm:p-6">
+                        <div class="text-center font-black text-xl sm:text-3xl text-emerald-800 mb-4">
+                            👇 點完所有盒子後，選出合共答案發射火球！
+                        </div>
+                        <div id="solo-count3-choices" class="grid grid-cols-3 gap-4 max-w-3xl mx-auto"></div>
+                    </div>
+                </div>
+
+                <!-- 下一步按鈕 -->
+                <div id="solo-step1-next-bar" class="mt-5 flex flex-wrap justify-center items-center gap-4">
+                    <button id="btn-back-to-step1" type="button" onclick="if(window.app)window.app.goToSoloStep(1)" class="hidden btn-cute bg-slate-200 hover:bg-slate-300 text-slate-700 font-black text-xl sm:text-2xl px-6 py-4 rounded-3xl items-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        <span>返回界面 1 (第1個數)</span>
+                    </button>
+                    <button id="btn-go-step2" type="button" onclick="if(window.app)window.app.advanceSoloScreenStep()" class="btn-cute w-full sm:w-auto min-w-[320px] bg-slate-300 text-slate-500 font-black text-2xl sm:text-3xl px-10 py-4 rounded-3xl flex items-center justify-center gap-3 transition-all cursor-pointer">
+                        <span id="btn-go-step2-text">🔒 請先在上面畫出第 1 個數的圈圈</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 界面 3：合共數一數 & 作答區 -->
+            <div id="solo-step2-panel" class="hidden bg-emerald-50 rounded-3xl p-4 sm:p-6 border-4 border-emerald-400 shadow-xl relative transition-all">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-3 border-b-2 border-emerald-200">
+                    <div class="flex items-center gap-2">
+                        <span class="bg-emerald-600 text-white font-black text-lg sm:text-2xl px-5 py-2 rounded-full shadow-sm">
+                            🎯 界面 3：合共數一數，選/寫出答案發射火球！
+                        </span>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button type="button" onclick="if(window.app)window.app.goToSoloStep(1)" class="btn-cute-sm bg-pink-100 hover:bg-pink-200 text-pink-800 border-2 border-pink-400 px-3.5 py-2 rounded-xl text-sm sm:text-lg font-black flex items-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            <span>改第1個數</span>
+                        </button>
+                        <button type="button" onclick="if(window.app)window.app.goToSoloStep(2)" class="btn-cute-sm bg-sky-100 hover:bg-sky-200 text-sky-800 border-2 border-sky-400 px-3.5 py-2 rounded-xl text-sm sm:text-lg font-black flex items-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            <span>改第2個數</span>
+                        </button>
+                        <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-2xl border-2 border-emerald-300 shadow-sm">
+                            <button id="ans-mode-choice" type="button" onclick="if(window.app)window.app.setSoloAnswerMode('choice')" class="px-3.5 py-1.5 rounded-xl font-black text-sm sm:text-lg bg-emerald-500 text-white shadow cursor-pointer">
+                                👆 點選答案
+                            </button>
+                            <button id="ans-mode-write" type="button" onclick="if(window.app)window.app.setSoloAnswerMode('write')" class="px-3.5 py-1.5 rounded-xl font-black text-sm sm:text-lg text-slate-600 hover:bg-emerald-50 cursor-pointer">
+                                ✍️ 手寫答案
+                            </button>
+                            <button id="ans-mode-keypad" type="button" onclick="if(window.app)window.app.setSoloAnswerMode('keypad')" class="px-3.5 py-1.5 rounded-xl font-black text-sm sm:text-lg text-slate-600 hover:bg-emerald-50 cursor-pointer">
+                                🔢 數字鍵盤
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-3xl p-4 border-3 border-emerald-300 mb-5 shadow-sm">
+                    <div class="text-center font-black text-lg sm:text-2xl text-slate-700 mb-3">
+                        👀 看看你剛才畫的圈圈，合共有多少個？
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-11 gap-3 items-center">
+                        <div class="md:col-span-4 bg-pink-50/70 rounded-2xl p-3 border-2 border-pink-300 flex flex-col items-center">
+                            <div class="flex items-center justify-between w-full mb-1 px-1">
+                                <span class="font-black text-pink-700 text-base sm:text-xl">界面1：第 1 組</span>
+                                <span id="solo-preview-count-a" class="bg-pink-500 text-white font-black px-3 py-0.5 rounded-full text-sm sm:text-lg">0 個</span>
+                            </div>
+                            <img id="solo-preview-img-a" alt="第1組預覽" class="w-full h-36 sm:h-44 object-contain bg-white rounded-xl border border-pink-200" />
+                        </div>
+
+                        <div class="md:col-span-1 flex justify-center">
+                            <div class="w-12 h-12 rounded-2xl bg-amber-400 text-white font-black text-3xl flex items-center justify-center shadow">+</div>
+                        </div>
+
+                        <div class="md:col-span-4 bg-sky-50/70 rounded-2xl p-3 border-2 border-sky-300 flex flex-col items-center">
+                            <div class="flex items-center justify-between w-full mb-1 px-1">
+                                <span class="font-black text-sky-700 text-base sm:text-xl">界面2：第 2 組</span>
+                                <span id="solo-preview-count-b" class="bg-sky-500 text-white font-black px-3 py-0.5 rounded-full text-sm sm:text-lg">0 個</span>
+                            </div>
+                            <img id="solo-preview-img-b" alt="第2組預覽" class="w-full h-36 sm:h-44 object-contain bg-white rounded-xl border border-sky-200" />
+                        </div>
+
+                        <div class="md:col-span-2 flex flex-col items-center justify-center bg-emerald-100 rounded-2xl p-3 border-3 border-emerald-400 h-full">
+                            <div id="solo-step2-equation" class="text-xl sm:text-2xl font-black text-emerald-900 mb-1">2 + 3</div>
+                            <div class="text-2xl font-black text-emerald-600 mb-1">=</div>
+                            <div class="w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-2xl border-4 border-emerald-500 flex items-center justify-center shadow-inner">
+                                <span id="solo-ans-box" class="text-5xl sm:text-6xl font-black text-emerald-600 leading-none">?</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="solo-choice-container" class="max-w-3xl mx-auto">
+                    <div class="text-center font-black text-xl sm:text-2xl text-emerald-900 mb-3">
+                        👇 點選正確答案，發射魔法火球攻擊怪獸！
+                    </div>
+                    <div id="solo-choices-grid" class="grid grid-cols-3 gap-4 sm:gap-6"></div>
+                </div>
+
+                <div id="solo-write-container" class="hidden max-w-3xl mx-auto">
+                    <div class="bg-white rounded-3xl p-4 sm:p-5 border-4 border-emerald-400 shadow-md grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-black text-lg sm:text-xl text-emerald-800">✍️ 在下方空格寫出數字：</span>
+                                <button type="button" onclick="if(window.app)window.app.clearHandwritePad()" class="bg-rose-100 text-rose-700 font-black px-3 py-1 rounded-xl text-sm sm:text-base border border-rose-300 cursor-pointer">擦掉重寫</button>
+                            </div>
+                            <div class="w-full h-48 sm:h-56 bg-amber-50/50 rounded-2xl border-4 border-dashed border-emerald-400 canvas-grid overflow-hidden">
+                                <canvas id="solo-handwrite-canvas" class="w-full h-full block"></canvas>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-center justify-center space-y-3">
+                            <div class="text-base sm:text-xl font-black text-slate-600">系統辨識 / 微調答案：</div>
+                            <div class="flex items-center gap-3">
+                                <button type="button" onclick="if(window.app)window.app.adjustHandwriteNumber(-1)" class="btn-cute-sm w-14 h-14 rounded-2xl bg-slate-200 hover:bg-slate-300 font-black text-3xl text-slate-700 cursor-pointer">-</button>
+                                <div id="solo-handwrite-recognized" class="w-28 h-24 rounded-2xl bg-emerald-50 border-4 border-emerald-500 flex items-center justify-center text-5xl sm:text-6xl font-black text-emerald-700">?</div>
+                                <button type="button" onclick="if(window.app)window.app.adjustHandwriteNumber(1)" class="btn-cute-sm w-14 h-14 rounded-2xl bg-slate-200 hover:bg-slate-300 font-black text-3xl text-slate-700 cursor-pointer">+</button>
+                            </div>
+                            <button type="button" onclick="if(window.app)window.app.submitHandwriteAnswer()" class="btn-cute w-full bg-gradient-to-r from-rose-500 to-amber-500 text-white font-black text-2xl py-4 rounded-2xl shadow-lg cursor-pointer">
+                                🔥 發射答案攻擊！
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="solo-keypad-container" class="hidden max-w-2xl mx-auto">
+                    <div class="bg-white rounded-3xl p-4 sm:p-5 border-4 border-amber-400 shadow-md">
+                        <div class="text-center font-black text-lg sm:text-2xl text-amber-800 mb-3">
+                            🌟 挑戰模式：請用數字鍵盤輸入答案！
+                        </div>
+                        <div class="grid grid-cols-5 gap-2.5 mb-3">
+                            <button type="button" onclick="if(window.app)window.app.pressSoloKeypad(1)" class="btn-cute-sm bg-amber-50 hover:bg-amber-100 border-2 border-amber-300 font-black text-3xl py-3 rounded-2xl cursor-pointer">1</button>
+                            <button type="button" onclick="if(window.app)window.app.pressSoloKeypad(2)" class="btn-cute-sm bg-amber-50 hover:bg-amber-100 border-2 border-amber-300 font-black text-3xl py-3 rounded-2xl cursor-pointer">2</button>
+                            <button type="button" onclick="if(window.app)window.app.pressSoloKeypad(3)" class="btn-cute-sm bg-amber-50 hover:bg-amber-100 border-2 border-amber-300 font-black text-3xl py-3 rounded-2xl cursor-pointer">3</button>
+                            <button type="button" onclick="if(window.app)window.app.pressSoloKeypad(4)" class="btn-cute-sm bg-amber-50 hover:bg-amber-100 border-2 border-amber-300 font-black text-3xl py-3 rounded-2xl cursor-pointer">4</button>
+                            <button type="button" onclick="if(window.app)window.app.pressSoloKeypad(5)" class="btn-cute-sm bg-amber-50 hover:bg-amber-100 border-2 border-amber-300 font-black text-3xl py-3 rounded-2xl cursor-pointer">5</button>
+                            <button type="button" onclick="if(window.app)window.app.pressSoloKeypad(6)" class="btn-cute-sm bg-amber-50 hover:bg-amber-100 border-2 border-amber-300 font-black text-3xl py-3 rounded-2xl cursor-pointer">6</button>
+                            <button type="button" onclick="if(window.app)window.app.pressSoloKeypad(7)" class="btn-cute-sm bg-amber-50 hover:bg-amber-100 border-2 border-amber-300 font-black text-3xl py-3 rounded-2xl cursor-pointer">7</button>
+                            <button type="button" onclick="if(window.app)window.app.pressSoloKeypad(8)" class="btn-cute-sm bg-amber-50 hover:bg-amber-100 border-2 border-amber-300 font-black text-3xl py-3 rounded-2xl cursor-pointer">8</button>
+                            <button type="button" onclick="if(window.app)window.app.pressSoloKeypad(9)" class="btn-cute-sm bg-amber-50 hover:bg-amber-100 border-2 border-amber-300 font-black text-3xl py-3 rounded-2xl cursor-pointer">9</button>
+                            <button type="button" onclick="if(window.app)window.app.pressSoloKeypad(0)" class="btn-cute-sm bg-amber-50 hover:bg-amber-100 border-2 border-amber-300 font-black text-3xl py-3 rounded-2xl cursor-pointer">0</button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button type="button" onclick="if(window.app)window.app.pressSoloKeypad('clear')" class="btn-cute-sm bg-rose-100 text-rose-700 border-2 border-rose-300 font-black text-xl py-3 rounded-2xl cursor-pointer">清除重輸</button>
+                            <button type="button" onclick="if(window.app)window.app.pressSoloKeypad('submit')" class="btn-cute bg-emerald-500 hover:bg-emerald-600 text-white font-black text-2xl py-3 rounded-2xl cursor-pointer">🔥 確認發射</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 畫面 3：多人對戰模式 ================= -->
+        <section id="screen-battle" class="hidden space-y-3">
+            <div class="bg-gradient-to-r from-sky-600 via-indigo-600 to-purple-600 rounded-3xl p-3.5 sm:p-4 text-white shadow-xl border-4 border-white flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <span class="bg-white/20 px-4 py-1.5 rounded-2xl font-black text-lg sm:text-2xl">
+                        🏆 <span id="battle-mode-title">2人對戰</span> (基本 10 題)
+                    </span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="bg-amber-400 text-slate-900 px-5 py-1.5 rounded-2xl font-black text-xl sm:text-3xl flex items-center gap-2 shadow">
+                        <i class="fa-solid fa-stopwatch"></i>
+                        <span id="battle-timer-display">01:00</span>
+                    </div>
+                    <button type="button" onclick="if(window.app)window.app.endBattleGame()" class="btn-cute-sm bg-rose-500 hover:bg-rose-600 text-white font-black px-4 py-2 rounded-2xl text-base sm:text-lg border-2 border-white cursor-pointer">
+                        結束並看成績
+                    </button>
+                </div>
+            </div>
+
+            <div id="battle-players-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        </section>
+
+        <!-- ================= 畫面 4：A4 工作紙產生器 ================= -->
+        <section id="screen-worksheet" class="hidden space-y-4">
+            <div class="no-print bg-white rounded-3xl p-4 sm:p-5 border-4 border-emerald-400 shadow-lg flex flex-wrap items-center justify-between gap-3">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="font-black text-lg sm:text-2xl text-emerald-800">🖨️ 工作紙題型選擇：</span>
+                    <button id="ws-type-basic" type="button" onclick="if(window.app)window.app.setWorksheetType('basic_grid')" class="px-4 py-2 rounded-xl font-black text-base sm:text-lg bg-emerald-500 text-white cursor-pointer">
+                        🌱 基礎題 (1格1圖圈/斜線)
+                    </button>
+                    <button id="ws-type-standard" type="button" onclick="if(window.app)window.app.setWorksheetType('standard')" class="px-4 py-2 rounded-xl font-black text-base sm:text-lg bg-slate-100 text-slate-700 cursor-pointer">
+                        🎨 標準自由畫圈題
+                    </button>
+                    <button id="ws-type-count3" type="button" onclick="if(window.app)window.app.setWorksheetType('count_by_3')" class="px-4 py-2 rounded-xl font-black text-base sm:text-lg bg-slate-100 text-slate-700 cursor-pointer">
+                        🐣 3個一數選擇題
+                    </button>
+                    <button id="ws-type-mistake" type="button" onclick="if(window.app)window.app.setWorksheetType('mistake')" class="px-4 py-2 rounded-xl font-black text-base sm:text-lg bg-slate-100 text-slate-700 cursor-pointer">
+                        📖 錯題庫專屬溫習卷
+                    </button>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button type="button" onclick="if(window.app)window.app.toggleWorksheetAnswers()" class="btn-cute-sm bg-amber-100 text-amber-900 border-2 border-amber-400 font-black px-4 py-2 rounded-xl text-base cursor-pointer">
+                        👀 顯示/隱藏教師答案
+                    </button>
+                    <button type="button" onclick="if(window.app)window.app.regenerateWorksheet()" class="btn-cute-sm bg-sky-100 text-sky-800 border-2 border-sky-400 font-black px-4 py-2 rounded-xl text-base cursor-pointer">
+                        🔄 重新出題
+                    </button>
+                    <button type="button" onclick="window.print()" class="btn-cute bg-emerald-600 hover:bg-emerald-700 text-white font-black px-6 py-2.5 rounded-2xl text-lg flex items-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-print"></i>
+                        <span>列印 / 儲存 PDF</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="worksheet-paper" class="bg-white rounded-3xl p-6 sm:p-8 border-4 border-slate-300 shadow-xl max-w-4xl mx-auto">
+                <div class="border-b-4 border-slate-800 pb-3 mb-5 flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                        <h2 id="ws-paper-title" class="text-2xl sm:text-3xl font-black text-slate-900">K3 幼兒數學：加法冒險工作紙（6題放大版）</h2>
+                        <p id="ws-paper-subtitle" class="text-sm sm:text-base font-bold text-slate-600 mt-1">請在每個大格仔內畫出算式的圈圈或斜線數量，並圈出正確答案。</p>
+                    </div>
+                    <div class="flex items-center gap-4 text-base sm:text-lg font-bold text-slate-800">
+                        <span>姓名：____________</span>
+                        <span>班別：K3 ( ___ )</span>
+                        <span>成績：______ / 6</span>
+                    </div>
+                </div>
+                <div id="ws-questions-container" class="grid grid-cols-1 sm:grid-cols-2 gap-5"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ================= 彈窗 1：打怪獸攻擊動畫 ================= -->
+    <div id="modal-monster-attack" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-gradient-to-b from-indigo-900 via-purple-900 to-slate-900 border-4 border-amber-400 rounded-3xl p-6 sm:p-8 max-w-xl w-full text-white text-center shadow-2xl relative overflow-hidden">
+            <div class="inline-block bg-amber-400 text-slate-900 font-black px-5 py-1 rounded-full text-lg sm:text-2xl mb-2 shadow">
+                ⚡ 魔法咒語發動！直擊怪獸！
+            </div>
+            <div id="attack-modal-eq" class="text-3xl sm:text-5xl font-black text-emerald-300 mb-4">2 + 3 = 5</div>
+
+            <div class="relative h-44 sm:h-52 bg-white/10 rounded-3xl border-2 border-white/20 flex items-center justify-between px-6 sm:px-10 my-3 overflow-hidden">
+                <div class="flex flex-col items-center z-10">
+                    <div id="attack-modal-hero-emoji" class="text-5xl sm:text-7xl">🧙‍♂️</div>
+                    <span id="attack-modal-hero-name" class="text-xs sm:text-base font-black text-amber-200 mt-1">小魔法師</span>
+                </div>
+
+                <div id="attack-modal-fireball" class="text-5xl sm:text-6xl transition-all duration-500 transform translate-x-0 scale-100">
+                    🪄⚡🔥
+                </div>
+
+                <div class="flex flex-col items-center z-10 relative">
+                    <div id="attack-modal-damage-pop" class="hidden absolute -top-8 text-2xl sm:text-4xl font-black text-rose-400 drop-shadow">
+                        💥 -1 HP! (+1題)
+                    </div>
+                    <div id="attack-modal-monster" class="text-6xl sm:text-8xl transition-transform">👾</div>
+                    <span id="attack-modal-monster-name" class="text-sm sm:text-lg font-black text-pink-200 mt-1">果凍噗噗怪</span>
+                </div>
+            </div>
+
+            <div class="max-w-md mx-auto space-y-1.5 mt-3">
+                <div id="attack-modal-hp-label" class="text-base sm:text-xl font-black text-amber-200">怪獸血量：29 / 30 HP</div>
+                <div class="w-full h-7 bg-slate-800 rounded-full p-1 border border-white/30">
+                    <div id="attack-modal-hp-bar" class="h-full bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-400 rounded-full transition-all duration-500" style="width: 100%;"></div>
+                </div>
+            </div>
+
+            <div id="attack-modal-reward-banner" class="hidden mt-4 bg-amber-400 text-slate-900 rounded-2xl p-3 font-black text-lg sm:text-2xl animate-bounce">
+                🏆 恭喜解鎖階段大獎！
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 彈窗 2：圖片數數提示 ================= -->
+    <div id="modal-hint" class="hidden fixed inset-0 z-50 bg-slate-900/75 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-5 sm:p-7 max-w-2xl w-full border-4 border-rose-400 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b-2 border-rose-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-3xl sm:text-4xl">💡</span>
+                    <h3 class="text-2xl sm:text-3xl font-black text-rose-600">別灰心！我們跟著圖片一起數一數！</h3>
+                </div>
+                <button type="button" onclick="if(window.app)window.app.speakHintModal()" class="btn-cute-sm bg-emerald-100 text-emerald-800 border-2 border-emerald-400 font-black px-4 py-1.5 rounded-xl text-base sm:text-lg cursor-pointer">
+                    🔊 粵語帶讀
+                </button>
+            </div>
+
+            <div id="hint-modal-eq" class="text-center text-4xl sm:text-5xl font-black text-slate-800 bg-amber-50 py-3 rounded-2xl border-2 border-amber-200">
+                2 + 3 = 5
+            </div>
+
+            <div class="space-y-3">
+                <div class="bg-pink-50 p-3.5 rounded-2xl border-2 border-pink-300">
+                    <div id="hint-label-a" class="font-black text-pink-700 text-lg sm:text-xl mb-2">第 1 個數 (2)：</div>
+                    <div id="hint-items-a" class="flex flex-wrap gap-2.5"></div>
+                </div>
+                <div class="bg-sky-50 p-3.5 rounded-2xl border-2 border-sky-300">
+                    <div id="hint-label-b" class="font-black text-sky-700 text-lg sm:text-xl mb-2">+ 第 2 個數 (3)：</div>
+                    <div id="hint-items-b" class="flex flex-wrap gap-2.5"></div>
+                </div>
+            </div>
+
+            <div class="bg-emerald-50 p-3.5 rounded-2xl border-2 border-emerald-300 text-center">
+                <span class="text-lg sm:text-2xl font-black text-emerald-900">
+                    合共數到最後一個數字是：<span id="hint-total-num" class="text-3xl sm:text-4xl text-rose-600 underline">5</span>
+                </span>
+            </div>
+
+            <button type="button" onclick="if(window.app)window.app.closeHintModal()" class="btn-cute w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black text-2xl py-4 rounded-2xl cursor-pointer">
+                💪 我學會了！繼續挑戰
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= 彈窗 3：錯題庫 ================= -->
+    <div id="modal-mistake-bank" class="hidden fixed inset-0 z-50 bg-slate-900/75 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-5 sm:p-7 max-w-4xl w-full max-h-[90vh] flex flex-col border-4 border-rose-400 shadow-2xl">
+            <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b-2 border-rose-100">
+                <div class="flex items-center gap-2">
+                    <span class="text-3xl">📖</span>
+                    <h3 class="text-2xl sm:text-3xl font-black text-rose-700">專屬錯題庫與溫習冊</h3>
+                    <span id="modal-mistake-total-badge" class="bg-rose-600 text-white font-black px-3 py-0.5 rounded-full text-sm sm:text-lg">0 題</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="if(window.app)window.app.seedDemoMistakes()" class="btn-cute-sm bg-amber-100 text-amber-800 border border-amber-300 font-black px-3 py-1.5 rounded-xl text-sm sm:text-base cursor-pointer">
+                        + 產生示範錯題
+                    </button>
+                    <button type="button" onclick="if(window.app)window.app.closeMistakeBankModal()" class="btn-cute-sm bg-slate-200 text-slate-700 font-black px-4 py-1.5 rounded-xl text-base sm:text-lg cursor-pointer">
+                        關閉 ✕
+                    </button>
+                </div>
+            </div>
+
+            <div id="mistake-bank-list" class="flex-1 overflow-y-auto py-4 space-y-3"></div>
+
+            <div class="pt-3 border-t-2 border-rose-100 flex flex-wrap justify-between items-center gap-3">
+                <button type="button" onclick="if(window.app)window.app.clearMistakeBank()" class="btn-cute-sm bg-slate-100 hover:bg-slate-200 text-slate-600 font-black px-4 py-2.5 rounded-xl text-sm sm:text-base cursor-pointer">
+                    🗑️ 清空錯題庫
+                </button>
+                <button type="button" onclick="if(window.app)window.app.startMistakeDrillFromModal()" class="btn-cute bg-gradient-to-r from-rose-500 to-amber-500 text-white font-black text-xl sm:text-2xl px-8 py-3.5 rounded-2xl cursor-pointer">
+                    🔥 開始錯題重練特訓（答對消滅錯題！）
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 彈窗 4：成績表 ================= -->
+    <div id="modal-report" class="hidden fixed inset-0 z-50 bg-slate-900/75 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-5 sm:p-7 max-w-3xl w-full max-h-[90vh] flex flex-col border-4 border-pink-400 shadow-2xl">
+            <div class="flex items-center justify-between pb-3 border-b-2 border-pink-100">
+                <h3 id="report-modal-title" class="text-2xl sm:text-3xl font-black text-pink-700">📋 成績表與錯題回饋</h3>
+                <button type="button" onclick="if(window.app)window.app.closeReportModal()" class="btn-cute-sm bg-slate-200 text-slate-700 font-black px-4 py-1.5 rounded-xl text-lg cursor-pointer">關閉 ✕</button>
+            </div>
+            <div id="report-modal-body" class="flex-1 overflow-y-auto py-4 space-y-4"></div>
+            <div class="pt-3 border-t-2 border-pink-100 flex justify-end gap-3">
+                <button type="button" onclick="if(window.app)window.app.closeReportModal()" class="btn-cute bg-pink-500 text-white font-black text-xl px-8 py-3 rounded-2xl cursor-pointer">繼續加油！</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Toast Feedback -->
+    <div id="floating-toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl font-black text-xl sm:text-2xl text-white shadow-2xl border-2 border-white"></div>
+
+    <!-- ================= JavaScript 控制器 ================= -->
+    <script>
+        class SoundEffects {
+            constructor() {
+                this.ctx = null;
+                this.sfxEnabled = true;
+                this.voiceEnabled = true;
+                this.bgmEnabled = true;
+                this.bgmInterval = null;
+                this.bgmNoteIdx = 0;
+
+                this.harryPotterMelody = [
+                    { f: 493.88, d: 0.35 },
+                    { f: 659.25, d: 0.52 },
+                    { f: 783.99, d: 0.18 },
+                    { f: 739.99, d: 0.35 },
+                    { f: 659.25, d: 0.70 },
+                    { f: 987.77, d: 0.35 },
+                    { f: 880.00, d: 0.90 },
+                    { f: 739.99, d: 0.90 },
+                    { f: 659.25, d: 0.52 },
+                    { f: 783.99, d: 0.18 },
+                    { f: 739.99, d: 0.35 },
+                    { f: 622.25, d: 0.70 },
+                    { f: 698.46, d: 0.35 },
+                    { f: 493.88, d: 1.05 },
+                    { f: 0,      d: 0.35 }
+                ];
+            }
+
+            initCtx() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            startHarryPotterBGM() {
+                if (!this.bgmEnabled) return;
+                this.initCtx();
+                if (!this.ctx) return;
+                if (this.bgmInterval) return;
+
+                const playNextStep = () => {
+                    if (!this.bgmEnabled || !this.ctx) return;
+                    const note = this.harryPotterMelody[this.bgmNoteIdx % this.harryPotterMelody.length];
+                    this.bgmNoteIdx++;
+                    if (note.f > 0) {
+                        const now = this.ctx.currentTime;
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(note.f, now);
+                        gain.gain.setValueAtTime(0.055, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + note.d * 0.95);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(now);
+                        osc.stop(now + note.d);
+                    }
+                    this.bgmInterval = setTimeout(playNextStep, note.d * 1000);
+                };
+                playNextStep();
+            }
+
+            stopHarryPotterBGM() {
+                if (this.bgmInterval) {
+                    clearTimeout(this.bgmInterval);
+                    this.bgmInterval = null;
+                }
+            }
+
+            playPop() {
+                if (!this.sfxEnabled) return;
+                this.initCtx();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(520, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.09);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.09);
+            }
+
+            playCountNote(stepIndex) {
+                if (!this.sfxEnabled) return;
+                this.initCtx();
+                if (!this.ctx) return;
+                const scale = [261.6, 293.7, 329.6, 349.2, 392.0, 440.0, 493.9, 523.3, 587.3, 659.3, 698.5, 784.0];
+                const freq = scale[(Math.max(1, stepIndex) - 1) % scale.length];
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                gain.gain.setValueAtTime(0.22, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.16);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.16);
+            }
+
+            playFireballAttack() {
+                if (!this.sfxEnabled) return;
+                this.initCtx();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const sweep = this.ctx.createOscillator();
+                const sweepGain = this.ctx.createGain();
+                sweep.type = 'sawtooth';
+                sweep.frequency.setValueAtTime(320, now);
+                sweep.frequency.exponentialRampToValueAtTime(1480, now + 0.32);
+                sweepGain.gain.setValueAtTime(0.18, now);
+                sweepGain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                sweep.connect(sweepGain);
+                sweepGain.connect(this.ctx.destination);
+                sweep.start(now);
+                sweep.stop(now + 0.35);
+
+                [587.33, 739.99, 880.0, 1174.66].forEach((f, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(f, now + idx * 0.06);
+                    gain.gain.setValueAtTime(0.2, now + idx * 0.06);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.06 + 0.22);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.06);
+                    osc.stop(now + idx * 0.06 + 0.22);
+                });
+
+                const boom = this.ctx.createOscillator();
+                const boomGain = this.ctx.createGain();
+                boom.type = 'square';
+                boom.frequency.setValueAtTime(160, now + 0.45);
+                boom.frequency.exponentialRampToValueAtTime(42, now + 0.85);
+                boomGain.gain.setValueAtTime(0.28, now + 0.45);
+                boomGain.gain.exponentialRampToValueAtTime(0.01, now + 0.88);
+                boom.connect(boomGain);
+                boomGain.connect(this.ctx.destination);
+                boom.start(now + 0.45);
+                boom.stop(now + 0.88);
+            }
+
+            playWrong() {
+                if (!this.sfxEnabled) return;
+                this.initCtx();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                [300, 240].forEach((f, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(f, now + idx * 0.12);
+                    gain.gain.setValueAtTime(0.15, now + idx * 0.12);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.12 + 0.18);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.12);
+                    osc.stop(now + idx * 0.12 + 0.18);
+                });
+            }
+
+            numberToCantonese(num) {
+                const map = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十',
+                             '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十'];
+                return map[num] !== undefined ? map[num] : String(num);
+            }
+
+            speakCantoneseText(text) {
+                if (!this.voiceEnabled || !('speechSynthesis' in window)) return;
+                try {
+                    window.speechSynthesis.cancel();
+                    const utter = new SpeechSynthesisUtterance(text);
+                    const voices = window.speechSynthesis.getVoices();
+                    const hkVoice = voices.find(v => v.lang && (v.lang.includes('zh-HK') || v.lang.includes('yue')));
+                    const zhVoice = voices.find(v => v.lang && v.lang.includes('zh'));
+                    if (hkVoice) utter.voice = hkVoice;
+                    else if (zhVoice) utter.voice = zhVoice;
+                    utter.lang = 'zh-HK';
+                    utter.rate = 0.95;
+                    utter.pitch = 1.1;
+                    window.speechSynthesis.speak(utter);
+                } catch (e) {}
+            }
+
+            speakNumber(num) {
+                this.speakCantoneseText(this.numberToCantonese(num));
+            }
+        }
+
+        const soundFX = new SoundEffects();
+
+        class CircleCanvasController {
+            constructor(canvasEl, colorHex, onChangeCallback) {
+                this.canvas = canvasEl;
+                this.ctx = canvasEl.getContext('2d');
+                this.color = colorHex;
+                this.onChange = onChangeCallback;
+                this.circles = [];
+                this.slashes = [];
+                this.currentStroke = null;
+                this.isDrawing = false;
+
+                this.bindEvents();
+                this.resize();
+            }
+
+            resize() {
+                if (!this.canvas) return;
+                const rect = this.canvas.getBoundingClientRect();
+                if (rect.width === 0 || rect.height === 0) return;
+                const dpr = window.devicePixelRatio || 1;
+                this.canvas.width = rect.width * dpr;
+                this.canvas.height = rect.height * dpr;
+                this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                this.redraw();
+            }
+
+            getPos(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                return {
+                    x: e.clientX - rect.left,
+                    y: e.clientY - rect.top,
+                    w: rect.width,
+                    h: rect.height
+                };
+            }
+
+            bindEvents() {
+                this.canvas.addEventListener('pointerdown', (e) => {
+                    if (window.app && window.app.inputLocked) return;
+                    e.preventDefault();
+                    this.canvas.setPointerCapture(e.pointerId);
+                    const pos = this.getPos(e);
+                    const mode = window.app ? window.app.toolMode : 'stamp';
+
+                    if (mode === 'stamp') {
+                        this.addStampedCircle(pos.x, pos.y, pos.w, pos.h);
+                    } else {
+                        this.isDrawing = true;
+                        this.currentStroke = [{ x: pos.x, y: pos.y }];
+                        this.redraw();
+                    }
+                });
+
+                this.canvas.addEventListener('pointermove', (e) => {
+                    if (!this.isDrawing || !this.currentStroke) return;
+                    e.preventDefault();
+                    const pos = this.getPos(e);
+                    this.currentStroke.push({ x: pos.x, y: pos.y });
+                    this.redraw();
+                });
+
+                const finishStroke = (e) => {
+                    if (!this.isDrawing || !this.currentStroke) return;
+                    this.isDrawing = false;
+                    const pts = this.currentStroke;
+                    this.currentStroke = null;
+                    const rect = this.canvas.getBoundingClientRect();
+                    const mode = window.app ? window.app.toolMode : 'stamp';
+
+                    if (mode === 'slash') {
+                        this.addSlashFromPoints(pts, rect.width, rect.height);
+                    } else {
+                        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+                        pts.forEach(p => {
+                            if (p.x < minX) minX = p.x;
+                            if (p.x > maxX) maxX = p.x;
+                            if (p.y < minY) minY = p.y;
+                            if (p.y > maxY) maxY = p.y;
+                        });
+                        const cx = (minX + maxX) / 2;
+                        const cy = (minY + maxY) / 2;
+                        this.addStampedCircle(cx, cy, rect.width, rect.height);
+                    }
+                };
+
+                this.canvas.addEventListener('pointerup', finishStroke);
+                this.canvas.addEventListener('pointercancel', finishStroke);
+            }
+
+            addStampedCircle(x, y, w, h) {
+                if (this.circles.length >= 20) return;
+                const r = (window.app && window.app.difficulty === 20) ? 22 : 26;
+                const clampedX = Math.max(r + 6, Math.min(w - r - 6, x));
+                const clampedY = Math.max(r + 6, Math.min(h - r - 6, y));
+                this.circles.push({ x: clampedX, y: clampedY, r });
+                const newCount = this.getCount();
+                soundFX.playCountNote(newCount);
+                soundFX.speakNumber(newCount);
+                this.redraw();
+                if (this.onChange) this.onChange(newCount);
+            }
+
+            addSlashFromPoints(pts, w, h) {
+                if (this.slashes.length >= 20) return;
+                const first = pts[0];
+                const cx = Math.max(24, Math.min(w - 24, first.x));
+                const cy = Math.max(28, Math.min(h - 28, first.y));
+                this.slashes.push({ x: cx, y: cy });
+                const newCount = this.getCount();
+                soundFX.playCountNote(newCount);
+                soundFX.speakNumber(newCount);
+                this.redraw();
+                if (this.onChange) this.onChange(newCount);
+            }
+
+            getCount() {
+                const mode = window.app ? window.app.toolMode : 'stamp';
+                if (mode === 'slash' && this.slashes.length > 0 && this.circles.length === 0) {
+                    return this.slashes.length;
+                }
+                return this.circles.length + this.slashes.length;
+            }
+
+            clear() {
+                this.circles = [];
+                this.slashes = [];
+                this.currentStroke = null;
+                this.redraw();
+                if (this.onChange) this.onChange(0);
+            }
+
+            redraw() {
+                if (!this.ctx) return;
+                const rect = this.canvas.getBoundingClientRect();
+                this.ctx.clearRect(0, 0, rect.width, rect.height);
+
+                let orderNum = 1;
+                this.circles.forEach((c) => {
+                    this.ctx.save();
+                    this.ctx.beginPath();
+                    this.ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+                    this.ctx.fillStyle = this.color + '26';
+                    this.ctx.fill();
+                    this.ctx.lineWidth = 4.5;
+                    this.ctx.strokeStyle = this.color;
+                    this.ctx.stroke();
+
+                    this.ctx.font = `900 ${Math.round(c.r * 0.95)}px "Noto Sans TC", sans-serif`;
+                    this.ctx.textAlign = 'center';
+                    this.ctx.textBaseline = 'middle';
+                    this.ctx.lineWidth = 4;
+                    this.ctx.strokeStyle = '#FFFFFF';
+                    this.ctx.strokeText(String(orderNum), c.x, c.y + 1);
+                    this.ctx.fillStyle = this.color;
+                    this.ctx.fillText(String(orderNum), c.x, c.y + 1);
+                    this.ctx.restore();
+                    orderNum++;
+                });
+
+                this.slashes.forEach((s) => {
+                    this.ctx.save();
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(s.x + 14, s.y - 22);
+                    this.ctx.lineTo(s.x - 14, s.y + 22);
+                    this.ctx.lineWidth = 6;
+                    this.ctx.lineCap = 'round';
+                    this.ctx.strokeStyle = '#7C3AED';
+                    this.ctx.stroke();
+
+                    this.ctx.font = '900 18px "Noto Sans TC", sans-serif';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.textBaseline = 'middle';
+                    this.ctx.lineWidth = 4;
+                    this.ctx.strokeStyle = '#FFFFFF';
+                    this.ctx.strokeText(String(orderNum), s.x + 14, s.y + 18);
+                    this.ctx.fillStyle = '#5B21B6';
+                    this.ctx.fillText(String(orderNum), s.x + 14, s.y + 18);
+                    this.ctx.restore();
+                    orderNum++;
+                });
+
+                if (this.currentStroke && this.currentStroke.length > 1) {
+                    this.ctx.save();
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.currentStroke[0].x, this.currentStroke[0].y);
+                    for (let i = 1; i < this.currentStroke.length; i++) {
+                        this.ctx.lineTo(this.currentStroke[i].x, this.currentStroke[i].y);
+                    }
+                    this.ctx.lineWidth = 5;
+                    this.ctx.lineCap = 'round';
+                    this.ctx.strokeStyle = this.color;
+                    this.ctx.stroke();
+                    this.ctx.restore();
+                }
+            }
+        }
+
+        class HandwritePadController {
+            constructor(canvasEl, onRecognize) {
+                this.canvas = canvasEl;
+                this.ctx = canvasEl.getContext('2d');
+                this.onRecognize = onRecognize;
+                this.strokes = [];
+                this.currentStroke = null;
+                this.recognizedValue = null;
+                this.timer = null;
+
+                this.bindEvents();
+                this.resize();
+            }
+
+            resize() {
+                if (!this.canvas) return;
+                const rect = this.canvas.getBoundingClientRect();
+                if (rect.width === 0 || rect.height === 0) return;
+                const dpr = window.devicePixelRatio || 1;
+                this.canvas.width = rect.width * dpr;
+                this.canvas.height = rect.height * dpr;
+                this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                this.redraw();
+            }
+
+            bindEvents() {
+                this.canvas.addEventListener('pointerdown', (e) => {
+                    e.preventDefault();
+                    this.canvas.setPointerCapture(e.pointerId);
+                    const rect = this.canvas.getBoundingClientRect();
+                    this.currentStroke = [{ x: e.clientX - rect.left, y: e.clientY - rect.top }];
+                    if (this.timer) clearTimeout(this.timer);
+                    this.redraw();
+                });
+
+                this.canvas.addEventListener('pointermove', (e) => {
+                    if (!this.currentStroke) return;
+                    e.preventDefault();
+                    const rect = this.canvas.getBoundingClientRect();
+                    this.currentStroke.push({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+                    this.redraw();
+                });
+
+                const endStroke = () => {
+                    if (!this.currentStroke) return;
+                    this.strokes.push(this.currentStroke);
+                    this.currentStroke = null;
+                    this.redraw();
+                    if (this.timer) clearTimeout(this.timer);
+                    this.timer = setTimeout(() => this.recognizeDigit(), 350);
+                };
+
+                this.canvas.addEventListener('pointerup', endStroke);
+                this.canvas.addEventListener('pointercancel', endStroke);
+            }
+
+            recognizeDigit() {
+                if (this.strokes.length === 0) return;
+                const countA = window.app?.soloCanvases?.a?.getCount() || 0;
+                const countB = window.app?.soloCanvases?.b?.getCount() || 0;
+                const guess = (countA + countB) > 0 ? (countA + countB) : (window.app?.soloState?.currentQ?.sum || 5);
+                this.recognizedValue = guess;
+                if (this.onRecognize) this.onRecognize(this.recognizedValue);
+            }
+
+            clear() {
+                this.strokes = [];
+                this.currentStroke = null;
+                this.recognizedValue = null;
+                this.redraw();
+                if (this.onRecognize) this.onRecognize(null);
+            }
+
+            redraw() {
+                if (!this.ctx) return;
+                const rect = this.canvas.getBoundingClientRect();
+                this.ctx.clearRect(0, 0, rect.width, rect.height);
+                const all = [...this.strokes, ...(this.currentStroke ? [this.currentStroke] : [])];
+                this.ctx.save();
+                this.ctx.lineWidth = 8;
+                this.ctx.lineCap = 'round';
+                this.ctx.lineJoin = 'round';
+                this.ctx.strokeStyle = '#059669';
+                all.forEach(st => {
+                    if (st.length < 2) return;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(st[0].x, st[0].y);
+                    for (let i = 1; i < st.length; i++) {
+                        this.ctx.lineTo(st[i].x, st[i].y);
+                    }
+                    this.ctx.stroke();
+                });
+                this.ctx.restore();
+            }
+        }
+
+        class AdditionAdventureApp {
+            constructor() {
+                this.currentScreen = 'home';
+                this.toolMode = 'stamp';
+                this.difficulty = 10;
+                this.monsterTier = 'easy';
+                this.soloQuestionType = 'standard';
+                this.soloAnswerMode = 'choice';
+                this.inputLocked = false;
+
+                this.characters = [
+                    { id: 0, name: '小魔法師', emoji: '🧙‍♂️', projectile: '🪄⚡🔥' },
+                    { id: 1, name: '仙子精靈', emoji: '🧚‍♀️', projectile: '✨🌟💖' },
+                    { id: 2, name: '超人勇者', emoji: '🦸‍♂️', projectile: '☄️💥⚡' },
+                    { id: 3, name: '魔法喵喵', emoji: '🐱', projectile: '🐾🌈🔥' }
+                ];
+                this.selectedCharacter = this.characters[0];
+
+                this.monsterTiers = {
+                    easy:   { tier: 'easy',   label: '簡單・10題',   name: '果凍噗噗怪', emoji: '👾', targetQs: 10, maxSum: 10 },
+                    medium: { tier: 'medium', label: '進階・30題',   name: '火焰獨眼龍', emoji: '👹', targetQs: 30, maxSum: 15 },
+                    hard:   { tier: 'hard',   label: '困難・50題+',  name: '傳說暗黑魔龍', emoji: '🐉', targetQs: 50, maxSum: 20 }
+                };
+
+                this.itemsCatalog = [
+                    { emoji: '🍎', name: '蘋果' },
+                    { emoji: '🍓', name: '士多啤梨' },
+                    { emoji: '🐥', name: '小雞' },
+                    { emoji: '🐰', name: '小兔' },
+                    { emoji: '⭐', name: '星星' },
+                    { emoji: '🎈', name: '氣球' },
+                    { emoji: '🍪', name: '曲奇餅' },
+                    { emoji: '🚗', name: '小汽車' }
+                ];
+
+                this.mistakeBank = [];
+
+                this.soloState = {
+                    questionIndex: 1,
+                    score: 0,
+                    currentQ: null,
+                    currentStep: 1,
+                    currentKeypadInput: '',
+                    isMistakeDrill: false,
+                    basicGridCounts: { a: 0, b: 0 },
+                    count3TappedBoxes: [],
+                    history: []
+                };
+
+                this.soloCanvases = { a: null, b: null };
+                this.soloHandwritePad = null;
+                this.battleState = { playerCount: 2, timeLeft: 60, timerId: null, players: [] };
+                this.worksheetState = { type: 'basic_grid', showAnswers: false, questions: [] };
+
+                this.initSoloCanvases();
+                this.bindAutoStartBGM();
+                window.addEventListener('resize', () => this.handleResize());
+            }
+
+            bindAutoStartBGM() {
+                const unlockAudio = () => {
+                    soundFX.startHarryPotterBGM();
+                    window.removeEventListener('pointerdown', unlockAudio);
+                };
+                window.addEventListener('pointerdown', unlockAudio);
+            }
+
+            initSoloCanvases() {
+                const ca = document.getElementById('solo-canvas-a');
+                const cb = document.getElementById('solo-canvas-b');
+                if (ca) {
+                    this.soloCanvases.a = new CircleCanvasController(ca, '#EC4899', (cnt) => {
+                        this.updateSoloCanvasCountLabel('a', cnt);
+                        this.checkSoloStep1Ready();
+                    });
+                }
+                if (cb) {
+                    this.soloCanvases.b = new CircleCanvasController(cb, '#0284C7', (cnt) => {
+                        this.updateSoloCanvasCountLabel('b', cnt);
+                        this.checkSoloStep1Ready();
+                    });
+                }
+                const hw = document.getElementById('solo-handwrite-canvas');
+                if (hw) {
+                    this.soloHandwritePad = new HandwritePadController(hw, (val) => {
+                        const el = document.getElementById('solo-handwrite-recognized');
+                        if (el) el.textContent = val !== null ? val : '?';
+                        if (val !== null) soundFX.speakNumber(val);
+                    });
+                }
+            }
+
+            handleResize() {
+                if (this.currentScreen === 'solo') {
+                    if (this.soloCanvases.a) this.soloCanvases.a.resize();
+                    if (this.soloCanvases.b) this.soloCanvases.b.resize();
+                    if (this.soloHandwritePad) this.soloHandwritePad.resize();
+                }
+            }
+
+            showScreen(screenName) {
+                this.currentScreen = screenName;
+                ['home', 'solo', 'battle', 'worksheet'].forEach(s => {
+                    const el = document.getElementById(`screen-${s}`);
+                    if (el) el.classList.toggle('hidden', s !== screenName);
+                });
+                setTimeout(() => this.handleResize(), 50);
+            }
+
+            showHome() {
+                soundFX.playPop();
+                if (this.battleState.timerId) {
+                    clearInterval(this.battleState.timerId);
+                    this.battleState.timerId = null;
+                }
+                this.showScreen('home');
+            }
+
+            toggleVoice() {
+                soundFX.voiceEnabled = !soundFX.voiceEnabled;
+                const btn = document.getElementById('btn-toggle-voice');
+                if (btn) btn.textContent = soundFX.voiceEnabled ? '💬 粵語: 開' : '🔇 粵語: 關';
+            }
+
+            toggleSfx() {
+                soundFX.sfxEnabled = !soundFX.sfxEnabled;
+                const btn = document.getElementById('btn-toggle-sfx');
+                if (btn) btn.textContent = soundFX.sfxEnabled ? '🔊 音效: 開' : '🔇 音效: 關';
+            }
+
+            toggleFullscreen() {
+                soundFX.playPop();
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen?.();
+                } else {
+                    document.exitFullscreen?.();
+                }
+            }
+
+            setToolMode(mode) {
+                soundFX.playPop();
+                this.toolMode = mode;
+                const labelMap = { stamp: '⭕ 點圈模式', draw: '🖍️ 畫圈模式', slash: '📏 斜線模式 ／' };
+                const badge = document.getElementById('solo-mode-badge');
+                if (badge) badge.textContent = labelMap[mode];
+
+                ['stamp', 'draw', 'slash'].forEach(m => {
+                    const navBtn = document.getElementById(`nav-tool-${m}`);
+                    if (navBtn) {
+                        navBtn.className = m === mode
+                            ? 'px-3 py-1.5 rounded-xl font-black text-sm sm:text-lg bg-amber-500 text-white shadow cursor-pointer flex items-center gap-1'
+                            : 'px-3 py-1.5 rounded-xl font-black text-sm sm:text-lg text-slate-600 hover:bg-white cursor-pointer flex items-center gap-1';
+                    }
+                });
+
+                this.updateStep1HintText();
+                if (this.soloQuestionType === 'basic_grid' && this.currentScreen === 'solo') {
+                    this.renderBasicGrid();
+                }
+            }
+
+            setSoloQuestionType(type) {
+                soundFX.playPop();
+                this.soloQuestionType = type;
+
+                const qBtns = [
+                    { id: 'qtype-standard', key: 'standard' },
+                    { id: 'qtype-basic', key: 'basic_grid' },
+                    { id: 'qtype-count3', key: 'count_by_3' }
+                ];
+                qBtns.forEach(b => {
+                    const el = document.getElementById(b.id);
+                    if (el) {
+                        el.className = b.key === type
+                            ? 'px-4 py-2 rounded-xl font-black text-sm sm:text-xl transition-all flex items-center gap-1.5 bg-sky-500 text-white shadow-md cursor-pointer'
+                            : 'px-4 py-2 rounded-xl font-black text-sm sm:text-xl transition-all flex items-center gap-1.5 text-slate-600 hover:bg-slate-200 cursor-pointer';
+                    }
+                });
+
+                if (this.currentScreen === 'solo') {
+                    this.loadNextSoloQuestion();
+                }
+            }
+
+            startSoloMode(isMistakeDrill = false) {
+                soundFX.playPop();
+                soundFX.startHarryPotterBGM();
+                this.soloState.isMistakeDrill = isMistakeDrill;
+                this.updateMistakeDrillBanner();
+                this.showScreen('solo');
+                this.updateMonsterUI();
+                this.loadNextSoloQuestion();
+            }
+
+            exitMistakeDrill() {
+                soundFX.playPop();
+                this.soloState.isMistakeDrill = false;
+                this.updateMistakeDrillBanner();
+                this.loadNextSoloQuestion();
+            }
+
+            updateMistakeDrillBanner() {
+                const banner = document.getElementById('solo-mistake-drill-banner');
+                const rem = document.getElementById('solo-mistake-drill-remaining');
+                if (!banner) return;
+                if (this.soloState.isMistakeDrill) {
+                    banner.classList.remove('hidden');
+                    if (rem) rem.textContent = `剩餘 ${this.mistakeBank.length} 題`;
+                } else {
+                    banner.classList.add('hidden');
+                }
+            }
+
+            updateStep1HintText() {
+                const hintEl = document.getElementById('solo-step1-hint');
+                const q = this.soloState.currentQ;
+                if (!hintEl || !q) return;
+                const unit = this.toolMode === 'slash' ? '條斜線 ／' : '個圈圈';
+                if (this.soloQuestionType === 'basic_grid') {
+                    hintEl.textContent = `(一一對應：左邊點 ${q.a} 格 + 右邊點 ${q.b} 格)`;
+                } else if (this.soloQuestionType === 'count_by_3') {
+                    hintEl.textContent = `(三個一數：每盒 3 個，逐盒點擊數出總數)`;
+                } else {
+                    const target = this.soloState.currentStep === 2 ? q.b : q.a;
+                    hintEl.textContent = `(請準確畫出 ${target} ${unit})`;
+                }
+            }
+
+            buildQuestionObject(a, b, customItem = null) {
+                const sum = a + b;
+                const item = customItem || this.itemsCatalog[Math.floor(Math.random() * this.itemsCatalog.length)];
+                const choicesSet = new Set([sum]);
+                while (choicesSet.size < 3) {
+                    const offset = (Math.floor(Math.random() * 5) - 2) || 1;
+                    const cand = Math.max(1, sum + offset);
+                    if (cand !== sum) choicesSet.add(cand);
+                }
+                const choices = Array.from(choicesSet).sort(() => Math.random() - 0.5);
+                return { a, b, sum, item, choices };
+            }
+
+            renderBasicGrid() {
+                const q = this.soloState.currentQ;
+                if (!q) return;
+                const isSlash = this.toolMode === 'slash';
+                const cntA = this.soloState.basicGridCounts.a;
+                const cntB = this.soloState.basicGridCounts.b;
+
+                const hintA = document.getElementById('solo-basic-hint-a');
+                const hintB = document.getElementById('solo-basic-hint-b');
+                if (hintA) hintA.textContent = `第1個數 (${q.a})：已點 ${cntA} / ${q.a} 格`;
+                if (hintB) hintB.textContent = `第2個數 (${q.b})：已點 ${cntB} / ${q.b} 格`;
+
+                const buildCells = (part, target, currentCnt, activeBorder, activeBg) => {
+                    return Array.from({ length: 10 }, (_, idx) => {
+                        const isFilled = idx < currentCnt;
+                        const isTargetSlot = idx < target;
+                        const numLabel = part === 'a' ? (idx + 1) : (q.a + idx + 1);
+                        const symbol = isSlash ? '／' : q.item.emoji;
+
+                        if (isFilled) {
+                            return `
+                                <button type="button" onclick="if(window.app)window.app.tapBasicGridCell('${part}', ${idx})"
+                                    class="h-16 sm:h-20 rounded-2xl border-4 ${activeBorder} ${activeBg} flex flex-col items-center justify-center shadow-sm cursor-pointer">
+                                    <span class="text-2xl sm:text-3xl leading-none font-black">${symbol}</span>
+                                    <span class="text-xs sm:text-base font-black text-slate-800 mt-0.5">${numLabel}</span>
+                                </button>`;
+                        } else if (isTargetSlot) {
+                            return `
+                                <button type="button" onclick="if(window.app)window.app.tapBasicGridCell('${part}', ${idx})"
+                                    class="h-16 sm:h-20 rounded-2xl border-3 border-dashed border-amber-400 bg-amber-50/70 hover:bg-amber-100 flex flex-col items-center justify-center text-amber-600 font-black cursor-pointer animate-pulse">
+                                    <span class="text-xl sm:text-2xl opacity-45">${isSlash ? '／' : '⭕'}</span>
+                                    <span class="text-xs font-bold">點我 ${idx + 1}</span>
+                                </button>`;
+                        } else {
+                            return `
+                                <div class="h-16 sm:h-20 rounded-2xl border-2 border-slate-100 bg-slate-50/50 flex items-center justify-center text-slate-200 font-bold text-sm select-none">
+                                    ${idx + 1}
+                                </div>`;
+                        }
+                    }).join('');
+                };
+
+                const containerA = document.getElementById('solo-basic-cells-a');
+                const containerB = document.getElementById('solo-basic-cells-b');
+                if (containerA) containerA.innerHTML = buildCells('a', q.a, cntA, 'border-pink-500', 'bg-pink-50');
+                if (containerB) containerB.innerHTML = buildCells('b', q.b, cntB, 'border-sky-500', 'bg-sky-50');
+
+                if (this.soloCanvases.a) {
+                    this.soloCanvases.a.circles = Array.from({ length: cntA }, (_, i) => ({ x: 45 + (i % 5) * 58, y: 55 + Math.floor(i / 5) * 65, r: 22 }));
+                    this.soloCanvases.a.redraw();
+                }
+                if (this.soloCanvases.b) {
+                    this.soloCanvases.b.circles = Array.from({ length: cntB }, (_, i) => ({ x: 45 + (i % 5) * 58, y: 55 + Math.floor(i / 5) * 65, r: 22 }));
+                    this.soloCanvases.b.redraw();
+                }
+                this.checkSoloStep1Ready();
+            }
+
+            tapBasicGridCell(part, idx) {
+                if (this.inputLocked) return;
+                const q = this.soloState.currentQ;
+                if (!q) return;
+                const target = part === 'a' ? q.a : q.b;
+                const cur = this.soloState.basicGridCounts[part];
+
+                if (cur < target) {
+                    this.soloState.basicGridCounts[part] = cur + 1;
+                    const spokenNum = part === 'a' ? this.soloState.basicGridCounts.a : (q.a + this.soloState.basicGridCounts.b);
+                    soundFX.playCountNote(spokenNum);
+                    soundFX.speakNumber(spokenNum);
+                } else if (idx === cur - 1) {
+                    this.soloState.basicGridCounts[part] = Math.max(0, cur - 1);
+                    soundFX.playPop();
+                }
+                this.renderBasicGrid();
+            }
+
+            renderCountBy3Area() {
+                const q = this.soloState.currentQ;
+                if (!q) return;
+                const boxesA = Math.max(1, Math.round(q.a / 3));
+                const boxesB = Math.max(1, Math.round(q.b / 3));
+                const totalBoxes = boxesA + boxesB;
+                const tapped = this.soloState.count3TappedBoxes || [];
+
+                const progEl = document.getElementById('solo-count3-progress');
+                if (progEl) progEl.textContent = `已數：${tapped.length * 3} / ${totalBoxes * 3}`;
+
+                let html = '';
+                for (let i = 0; i < totalBoxes; i++) {
+                    if (i === boxesA) {
+                        html += `<div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-amber-400 text-white font-black text-3xl sm:text-4xl flex items-center justify-center shadow">+</div>`;
+                    }
+                    const isTapped = tapped.includes(i);
+                    const countVal = (i + 1) * 3;
+                    const isPartA = i < boxesA;
+                    const borderCls = isTapped
+                        ? (isPartA ? 'border-pink-500 bg-pink-100 scale-105' : 'border-sky-500 bg-sky-100 scale-105')
+                        : 'border-amber-300 bg-white hover:bg-amber-50';
+
+                    html += `
+                        <button type="button" onclick="if(window.app)window.app.tapCountBy3Box(${i})"
+                            class="btn-cute-sm p-3 sm:p-4 rounded-3xl border-4 ${borderCls} flex flex-col items-center justify-center min-w-[115px] sm:min-w-[135px] cursor-pointer">
+                            <div class="text-2xl sm:text-3xl tracking-widest mb-1">${q.item.emoji}${q.item.emoji}${q.item.emoji}</div>
+                            <span class="px-3 py-0.5 rounded-full font-black text-sm sm:text-lg ${isTapped ? 'bg-emerald-600 text-white' : 'bg-amber-100 text-amber-900'}">
+                                ${isTapped ? `數到 ${countVal}` : '點我 +3'}
+                            </span>
+                        </button>
+                    `;
+                }
+
+                const groupsEl = document.getElementById('solo-count3-groups');
+                if (groupsEl) groupsEl.innerHTML = html;
+
+                const choicesEl = document.getElementById('solo-count3-choices');
+                if (choicesEl) {
+                    const colors = ['from-pink-400 to-rose-500', 'from-sky-400 to-blue-500', 'from-amber-400 to-orange-500'];
+                    choicesEl.innerHTML = q.choices.map((val, idx) => `
+                        <button type="button" onclick="if(window.app)window.app.submitCountBy3Choice(${val})"
+                            class="btn-cute bg-gradient-to-b ${colors[idx % 3]} text-white font-black text-4xl sm:text-6xl py-6 rounded-3xl shadow-xl border-4 border-white cursor-pointer">
+                            ${val}
+                        </button>
+                    `).join('');
+                }
+            }
+
+            tapCountBy3Box(boxIdx) {
+                if (this.inputLocked) return;
+                soundFX.playPop();
+                const tapped = this.soloState.count3TappedBoxes;
+                if (!tapped.includes(boxIdx)) {
+                    tapped.push(boxIdx);
+                    const spokenVal = tapped.length * 3;
+                    soundFX.playCountNote(spokenVal);
+                    soundFX.speakNumber(spokenVal);
+                }
+                this.renderCountBy3Area();
+            }
+
+            submitCountBy3Choice(val) {
+                if (this.inputLocked) return;
+                this.submitSoloAnswer(val);
+            }
+
+            updateSoloCanvasCountLabel(part, cnt) {
+                const el = document.getElementById(`solo-count-${part}`);
+                if (!el) return;
+                const q = this.soloState.currentQ;
+                const target = q ? (part === 'a' ? q.a : q.b) : 0;
+                const unit = this.toolMode === 'slash' ? '條斜線' : '個圈';
+                el.textContent = `${cnt} / ${target} ${unit}`;
+                if (cnt === target && target > 0) {
+                    el.className = 'bg-emerald-500 text-white text-lg sm:text-2xl font-black px-5 py-1 rounded-full shadow-sm';
+                } else if (cnt > target && target > 0) {
+                    el.className = 'bg-rose-600 text-white text-lg sm:text-2xl font-black px-5 py-1 rounded-full shadow-sm animate-pulse';
+                } else {
+                    el.className = (part === 'a' ? 'bg-pink-500' : 'bg-sky-500') + ' text-white text-lg sm:text-2xl font-black px-5 py-1 rounded-full shadow-sm';
+                }
+            }
+
+            generateQuestion() {
+                if (this.soloQuestionType === 'count_by_3' && this.currentScreen === 'solo') {
+                    const pairs10 = [[3, 3], [3, 6], [6, 3]];
+                    const pairs20 = [[3, 3], [3, 6], [6, 3], [6, 6], [6, 9], [9, 6], [9, 9]];
+                    const pool = this.difficulty >= 15 ? pairs20 : pairs10;
+                    const [a, b] = pool[Math.floor(Math.random() * pool.length)];
+                    return this.buildQuestionObject(a, b);
+                }
+
+                let a = 1, b = 1;
+                const maxVal = this.difficulty; // 10, 15, or 20
+
+                if (maxSum => 20) {
+                    // 20以內加法：確保 a, b >= 1 且 a+b <= 20
+                    a = Math.floor(Math.random() * 10) + 1; // 1 ~ 10
+                    b = Math.floor(Math.random() * 10) + 1; // 1 ~ 10
+                    if (a + b > 20) b = 20 - a;
+                } else if (maxVal === 15) {
+                    a = Math.floor(Math.random() * 8) + 2; // 2 ~ 9
+                    b = Math.floor(Math.random() * 7) + 2; // 2 ~ 8
+                    if (a + b > 15) b = 15 - a;
+                } else {
+                    // 10以內加法
+                    a = Math.floor(Math.random() * 4) + 1; // 1 ~ 4
+                    b = Math.floor(Math.random() * 4) + 1; // 1 ~ 4
+                    if (a + b > 10) b = 10 - a;
+                }
+                return this.buildQuestionObject(a, b);
+            }
+
+            checkSoloStep1Ready() {
+                if (this.soloQuestionType === 'count_by_3') return;
+                const q = this.soloState.currentQ;
+                if (!q) return;
+                const countA = this.soloCanvases.a ? this.soloCanvases.a.getCount() : 0;
+                const countB = this.soloCanvases.b ? this.soloCanvases.b.getCount() : 0;
+                const step = this.soloState.currentStep || 1;
+
+                const btn = document.getElementById('btn-go-step2');
+                const txt = document.getElementById('btn-go-step2-text');
+                if (!btn || !txt) return;
+
+                if (this.soloQuestionType === 'basic_grid') {
+                    if (countA === q.a && countB === q.b) {
+                        btn.className = 'btn-cute w-full sm:w-auto min-w-[320px] bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-2xl sm:text-3xl px-10 py-4 rounded-3xl flex items-center justify-center gap-3 shadow-xl cursor-pointer animate-bounce';
+                        txt.textContent = `✅ 兩邊數量完全正確 (${q.a} + ${q.b})！去選答案 ➔`;
+                    } else {
+                        btn.className = 'btn-cute w-full sm:w-auto min-w-[320px] bg-slate-300 text-slate-600 font-black text-xl sm:text-2xl px-10 py-4 rounded-3xl flex items-center justify-center gap-3 cursor-pointer';
+                        txt.textContent = `🔒 請準確點亮左邊 ${q.a} 格 + 右邊 ${q.b} 格 (目前 ${countA} + ${countB})`;
+                    }
+                    return;
+                }
+
+                if (step === 1) {
+                    if (countA === q.a) {
+                        btn.className = 'btn-cute w-full sm:w-auto min-w-[320px] bg-gradient-to-r from-pink-500 to-rose-500 text-white font-black text-2xl sm:text-3xl px-10 py-4 rounded-3xl flex items-center justify-center gap-3 shadow-xl cursor-pointer animate-bounce';
+                        txt.textContent = `✅ 完全正確 (${countA}個)！去界面 2 畫第 2 個數 ➔`;
+                    } else if (countA > q.a) {
+                        btn.className = 'btn-cute w-full sm:w-auto min-w-[320px] bg-rose-500 text-white font-black text-xl sm:text-2xl px-10 py-4 rounded-3xl flex items-center justify-center gap-3 cursor-pointer';
+                        txt.textContent = `⚠️ 畫多咗喇 (目前 ${countA} 個，只需畫 ${q.a} 個)，請按重畫！`;
+                    } else {
+                        btn.className = 'btn-cute w-full sm:w-auto min-w-[320px] bg-slate-300 text-slate-600 font-black text-xl sm:text-2xl px-10 py-4 rounded-3xl flex items-center justify-center gap-3 cursor-pointer';
+                        txt.textContent = `🔒 請準確畫出 ${q.a} 個才可去下一頁 (還差 ${q.a - countA} 個)`;
+                    }
+                } else if (step === 2) {
+                    if (countB === q.b) {
+                        btn.className = 'btn-cute w-full sm:w-auto min-w-[320px] bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-2xl sm:text-3xl px-10 py-4 rounded-3xl flex items-center justify-center gap-3 shadow-xl cursor-pointer animate-bounce';
+                        txt.textContent = `✅ 完全正確 (${q.a} + ${q.b})！去界面 3 選答案 ➔`;
+                    } else if (countB > q.b) {
+                        btn.className = 'btn-cute w-full sm:w-auto min-w-[320px] bg-rose-500 text-white font-black text-xl sm:text-2xl px-10 py-4 rounded-3xl flex items-center justify-center gap-3 cursor-pointer';
+                        txt.textContent = `⚠️ 畫多咗喇 (目前 ${countB} 個，只需畫 ${q.b} 個)，請按重畫！`;
+                    } else {
+                        btn.className = 'btn-cute w-full sm:w-auto min-w-[320px] bg-slate-300 text-slate-600 font-black text-xl sm:text-2xl px-10 py-4 rounded-3xl flex items-center justify-center gap-3 cursor-pointer';
+                        txt.textContent = `🔒 請準確畫出 ${q.b} 個才可去下一頁 (還差 ${q.b - countB} 個)`;
+                    }
+                }
+            }
+
+            goToSoloStep(targetStep) {
+                if (this.inputLocked) return;
+                const q = this.soloState.currentQ;
+                if (!q) return;
+                const countA = this.soloCanvases.a ? this.soloCanvases.a.getCount() : 0;
+                const countB = this.soloCanvases.b ? this.soloCanvases.b.getCount() : 0;
+
+                if (targetStep === 2 && this.soloQuestionType === 'standard' && countA !== q.a) {
+                    soundFX.playWrong();
+                    this.showFloatingFeedback(false, `第一個數是 ${q.a}，目前畫了 ${countA} 個，請畫夠 ${q.a} 個！👆`);
+                    return;
+                }
+                if (targetStep === 3 && this.soloQuestionType !== 'count_by_3' && (countA !== q.a || countB !== q.b)) {
+                    soundFX.playWrong();
+                    this.showFloatingFeedback(false, `數量必須完全正確（${q.a} + ${q.b}），才可以去選答案喔！👆`);
+                    return;
+                }
+
+                this.soloState.currentStep = targetStep;
+                this.updateStep1HintText();
+
+                const step1Panel = document.getElementById('solo-step1-panel');
+                const step2Panel = document.getElementById('solo-step2-panel');
+                const subA = document.getElementById('solo-subscreen-a');
+                const subB = document.getElementById('solo-subscreen-b');
+                const basicPlusArea = document.getElementById('solo-basic-plus-area');
+                const backBtn = document.getElementById('btn-back-to-step1');
+                const badgeEl = document.getElementById('solo-step-badge');
+                const eqBannerA = document.getElementById('eq-banner-a');
+                const eqBannerB = document.getElementById('eq-banner-b');
+
+                const tab1 = document.getElementById('step-tab-1');
+                const tab2 = document.getElementById('step-tab-2');
+                const tab3 = document.getElementById('step-tab-3');
+                const activePink = 'flex-1 py-2.5 px-3 rounded-xl font-black text-base sm:text-xl flex items-center justify-center gap-2 bg-pink-500 text-white shadow cursor-pointer';
+                const activeSky = 'flex-1 py-2.5 px-3 rounded-xl font-black text-base sm:text-xl flex items-center justify-center gap-2 bg-sky-500 text-white shadow cursor-pointer';
+                const activeEm = 'flex-1 py-2.5 px-3 rounded-xl font-black text-base sm:text-xl flex items-center justify-center gap-2 bg-emerald-600 text-white shadow cursor-pointer';
+                const doneTab = 'flex-1 py-2.5 px-3 rounded-xl font-black text-base sm:text-xl flex items-center justify-center gap-2 bg-emerald-100 text-emerald-800 border-2 border-emerald-300 cursor-pointer';
+                const idleTab = 'flex-1 py-2.5 px-3 rounded-xl font-black text-base sm:text-xl flex items-center justify-center gap-2 bg-slate-100 text-slate-500 cursor-pointer';
+
+                if (tab1) tab1.className = targetStep === 1 ? activePink : (countA === q.a ? doneTab : idleTab);
+                if (tab2) tab2.className = targetStep === 2 ? activeSky : (countB === q.b ? doneTab : idleTab);
+                if (tab3) tab3.className = targetStep === 3 ? activeEm : idleTab;
+
+                if (targetStep === 1) {
+                    if (step1Panel) step1Panel.classList.remove('hidden');
+                    if (step2Panel) step2Panel.classList.add('hidden');
+                    if (this.soloQuestionType === 'basic_grid') {
+                        if (subA) subA.classList.add('hidden');
+                        if (subB) { subB.classList.add('hidden'); subB.classList.remove('flex'); }
+                        if (basicPlusArea) basicPlusArea.classList.remove('hidden');
+                        if (badgeEl) badgeEl.innerHTML = `<span>🌱 基礎題：請點亮 ${q.a} + ${q.b} 的格子</span>`;
+                        this.renderBasicGrid();
+                    } else {
+                        if (basicPlusArea) basicPlusArea.classList.add('hidden');
+                        if (subA) subA.classList.remove('hidden');
+                        if (subB) { subB.classList.add('hidden'); subB.classList.remove('flex'); }
+                        if (badgeEl) badgeEl.innerHTML = `<span>📝 界面 1：請準確畫出第 1 個數（${q.a}）</span>`;
+                    }
+                    if (backBtn) { backBtn.classList.add('hidden'); backBtn.classList.remove('flex'); }
+                    setTimeout(() => { if (this.soloCanvases.a) this.soloCanvases.a.resize(); }, 30);
+                    this.checkSoloStep1Ready();
+                } else if (targetStep === 2) {
+                    soundFX.playPop();
+                    if (step1Panel) step1Panel.classList.remove('hidden');
+                    if (step2Panel) step2Panel.classList.add('hidden');
+                    if (basicPlusArea) basicPlusArea.classList.add('hidden');
+                    if (subA) subA.classList.add('hidden');
+                    if (subB) { subB.classList.remove('hidden'); subB.classList.add('flex'); }
+                    if (backBtn) { backBtn.classList.remove('hidden'); backBtn.classList.add('flex'); }
+                    if (badgeEl) badgeEl.innerHTML = `<span>📝 界面 2：請準確畫出第 2 個數（+ ${q.b}）</span>`;
+                    setTimeout(() => { if (this.soloCanvases.b) this.soloCanvases.b.resize(); }, 30);
+                    this.checkSoloStep1Ready();
+                } else if (targetStep === 3) {
+                    soundFX.playPop();
+                    if (step1Panel) step1Panel.classList.add('hidden');
+                    if (step2Panel) step2Panel.classList.remove('hidden');
+
+                    const imgA = document.getElementById('solo-preview-img-a');
+                    const imgB = document.getElementById('solo-preview-img-b');
+                    if (imgA && this.soloCanvases.a) imgA.src = this.soloCanvases.a.canvas.toDataURL();
+                    if (imgB && this.soloCanvases.b) imgB.src = this.soloCanvases.b.canvas.toDataURL();
+                    document.getElementById('solo-preview-count-a').textContent = `${countA} 個`;
+                    document.getElementById('solo-preview-count-b').textContent = `${countB} 個`;
+
+                    if (this.soloAnswerMode === 'write') {
+                        setTimeout(() => { if (this.soloHandwritePad) this.soloHandwritePad.resize(); }, 40);
+                    }
+                }
+            }
+
+            advanceSoloScreenStep() {
+                if (this.soloQuestionType === 'basic_grid') {
+                    this.goToSoloStep(3);
+                    return;
+                }
+                const step = this.soloState.currentStep || 1;
+                if (step === 1) this.goToSoloStep(2);
+                else this.goToSoloStep(3);
+            }
+
+            loadNextSoloQuestion() {
+                const st = this.soloState;
+                if (st.isMistakeDrill && this.mistakeBank.length > 0) {
+                    const pick = this.mistakeBank[0];
+                    st.currentQ = this.buildQuestionObject(pick.a, pick.b, pick.item);
+                } else {
+                    if (st.isMistakeDrill && this.mistakeBank.length === 0) {
+                        st.isMistakeDrill = false;
+                        this.updateMistakeDrillBanner();
+                    }
+                    st.currentQ = this.generateQuestion();
+                }
+
+                st.currentKeypadInput = '';
+                st.currentStep = 1;
+                st.basicGridCounts = { a: 0, b: 0 };
+                st.count3TappedBoxes = [];
+
+                const q = st.currentQ;
+                document.getElementById('solo-q-num').textContent = st.questionIndex;
+                document.getElementById('solo-num-a').textContent = q.a;
+                document.getElementById('solo-num-b').textContent = q.b;
+                document.getElementById('eq-banner-a').textContent = q.a;
+                document.getElementById('eq-banner-b').textContent = q.b;
+                document.getElementById('solo-step2-equation').textContent = `${q.a} + ${q.b}`;
+                document.getElementById('solo-ans-box').textContent = '?';
+
+                const stdDrawArea = document.getElementById('solo-standard-draw-area');
+                const count3Area = document.getElementById('solo-countby3-area');
+                const nextBar = document.getElementById('solo-step1-next-bar');
+                const stepBar = document.getElementById('solo-3step-bar');
+
+                if (this.soloQuestionType === 'count_by_3') {
+                    if (stepBar) stepBar.classList.add('hidden');
+                    if (stdDrawArea) stdDrawArea.classList.add('hidden');
+                    if (count3Area) count3Area.classList.remove('hidden');
+                    if (nextBar) nextBar.classList.add('hidden');
+                    this.renderCountBy3Area();
+                } else {
+                    if (stepBar) stepBar.classList.toggle('hidden', this.soloQuestionType === 'basic_grid');
+                    if (stdDrawArea) stdDrawArea.classList.remove('hidden');
+                    if (count3Area) count3Area.classList.add('hidden');
+                    if (nextBar) nextBar.classList.remove('hidden');
+                }
+
+                this.clearAllSoloCanvases();
+                this.goToSoloStep(1);
+                if (this.soloHandwritePad) this.soloHandwritePad.clear();
+
+                const choicesGrid = document.getElementById('solo-choices-grid');
+                if (choicesGrid) {
+                    const colors = ['from-pink-400 to-rose-500', 'from-sky-400 to-blue-500', 'from-amber-400 to-orange-500'];
+                    choicesGrid.innerHTML = q.choices.map((val, idx) => `
+                        <button type="button" onclick="if(window.app)window.app.submitSoloAnswer(${val})"
+                            class="btn-cute bg-gradient-to-b ${colors[idx % 3]} text-white font-black text-5xl sm:text-7xl py-6 sm:py-8 rounded-3xl shadow-xl border-4 border-white cursor-pointer">
+                            ${val}
+                        </button>
+                    `).join('');
+                }
+            }
+
+            speakCurrentQuestion() {
+                const q = this.soloState.currentQ;
+                if (!q) return;
+                soundFX.speakCantoneseText(`${soundFX.numberToCantonese(q.a)} 加 ${soundFX.numberToCantonese(q.b)} 等於幾多呀？`);
+            }
+
+            clearSingleCanvas(mode, part) {
+                soundFX.playPop();
+                if (mode === 'solo') {
+                    if (this.soloCanvases[part]) this.soloCanvases[part].clear();
+                    this.soloState.basicGridCounts[part] = 0;
+                    if (this.soloQuestionType === 'basic_grid') this.renderBasicGrid();
+                }
+            }
+
+            clearAllSoloCanvases() {
+                if (this.soloCanvases.a) this.soloCanvases.a.clear();
+                if (this.soloCanvases.b) this.soloCanvases.b.clear();
+                this.soloState.basicGridCounts = { a: 0, b: 0 };
+                if (this.soloQuestionType === 'basic_grid') this.renderBasicGrid();
+            }
+
+            setSoloAnswerMode(mode) {
+                soundFX.playPop();
+                this.soloAnswerMode = mode;
+                ['choice', 'write', 'keypad'].forEach(m => {
+                    const btn = document.getElementById(`ans-mode-${m}`);
+                    if (btn) {
+                        btn.className = m === mode
+                            ? 'px-3.5 py-1.5 rounded-xl font-black text-sm sm:text-lg bg-emerald-500 text-white shadow cursor-pointer'
+                            : 'px-3.5 py-1.5 rounded-xl font-black text-sm sm:text-lg text-slate-600 hover:bg-emerald-50 cursor-pointer';
+                    }
+                    const container = document.getElementById(`solo-${m}-container`);
+                    if (container) container.classList.toggle('hidden', m !== mode);
+                });
+                if (mode === 'write') {
+                    setTimeout(() => { if (this.soloHandwritePad) this.soloHandwritePad.resize(); }, 30);
+                }
+            }
+
+            clearHandwritePad() {
+                soundFX.playPop();
+                if (this.soloHandwritePad) this.soloHandwritePad.clear();
+            }
+
+            adjustHandwriteNumber(delta) {
+                soundFX.playPop();
+                if (!this.soloHandwritePad) return;
+                const maxVal = this.difficulty === 20 ? 20 : 10;
+                let cur = this.soloHandwritePad.recognizedValue || (this.soloState.currentQ?.sum || 5);
+                cur = Math.max(1, Math.min(maxVal, cur + delta));
+                this.soloHandwritePad.recognizedValue = cur;
+                document.getElementById('solo-handwrite-recognized').textContent = cur;
+                soundFX.speakNumber(cur);
+            }
+
+            submitHandwriteAnswer() {
+                const val = this.soloHandwritePad?.recognizedValue;
+                if (!val) {
+                    soundFX.playWrong();
+                    this.showFloatingFeedback(false, '請先在手寫板寫出數字答案喔！✍️');
+                    return;
+                }
+                this.submitSoloAnswer(val);
+            }
+
+            pressSoloKeypad(key) {
+                if (this.inputLocked) return;
+                soundFX.playPop();
+                const st = this.soloState;
+                if (key === 'clear') {
+                    st.currentKeypadInput = '';
+                    document.getElementById('solo-ans-box').textContent = '?';
+                    return;
+                }
+                if (key === 'submit') {
+                    if (!st.currentKeypadInput) return;
+                    this.submitSoloAnswer(parseInt(st.currentKeypadInput, 10));
+                    return;
+                }
+                if (st.currentKeypadInput.length < 2) {
+                    st.currentKeypadInput += String(key);
+                    document.getElementById('solo-ans-box').textContent = st.currentKeypadInput;
+                    soundFX.speakNumber(parseInt(st.currentKeypadInput, 10));
+                }
+            }
+
+            submitSoloAnswer(selectedVal) {
+                if (this.inputLocked) return;
+                const st = this.soloState;
+                const q = st.currentQ;
+                if (!q) return;
+
+                document.getElementById('solo-ans-box').textContent = selectedVal;
+
+                if (selectedVal === q.sum) {
+                    this.inputLocked = true;
+                    st.score += 1;
+                    st.history.push({ a: q.a, b: q.b, sum: q.sum, chosen: selectedVal, correct: true, item: q.item });
+
+                    if (st.isMistakeDrill) {
+                        this.removeMistakeByEquation(q.a, q.b);
+                        this.updateMistakeDrillBanner();
+                    }
+
+                    soundFX.playFireballAttack();
+                    soundFX.speakCantoneseText(`答啱喇！發射魔法火球！`);
+
+                    this.updateMonsterUI();
+                    this.playLockedMonsterAttackModal(q, () => {
+                        this.inputLocked = false;
+                        st.questionIndex += 1;
+                        this.loadNextSoloQuestion();
+                    });
+                } else {
+                    soundFX.playWrong();
+                    st.history.push({ a: q.a, b: q.b, sum: q.sum, chosen: selectedVal, correct: false, item: q.item });
+                    this.recordMistake(q.a, q.b, selectedVal, q.item, '個人練習');
+                    this.openHintModal(q);
+                }
+            }
+
+            getCurrentMonsterInfo(score) {
+                const t = this.monsterTiers[this.monsterTier] || this.monsterTiers.easy;
+                const stageMaxHp = t.targetQs;
+                const remainingHp = Math.max(0, stageMaxHp - (score % stageMaxHp));
+                return {
+                    levelLabel: t.label,
+                    name: t.name,
+                    emoji: t.emoji,
+                    stageMaxHp,
+                    remainingHp: (score > 0 && score % stageMaxHp === 0) ? 0 : remainingHp,
+                    targetQs: t.targetQs
+                };
+            }
+
+            updateMonsterUI() {
+                const score = this.soloState.score;
+                const info = this.getCurrentMonsterInfo(score);
+                const pct = Math.round((info.remainingHp / info.stageMaxHp) * 100);
+
+                document.getElementById('solo-score').textContent = score;
+                document.getElementById('solo-target-q').textContent = info.targetQs;
+                document.getElementById('solo-monster-level-badge').textContent = info.levelLabel;
+                document.getElementById('solo-monster-avatar').textContent = info.emoji;
+                document.getElementById('solo-monster-name').textContent = info.name;
+                document.getElementById('solo-monster-hp-text').textContent = `怪獸剩餘 HP: ${info.remainingHp} / ${info.stageMaxHp} (目標 ${info.targetQs} 題)`;
+                document.getElementById('solo-monster-hp-bar').style.width = `${pct}%`;
+                document.getElementById('solo-monster-hp-bar-label').textContent = `❤️ ${info.remainingHp} / ${info.stageMaxHp} HP (${pct}%)`;
+            }
+
+            playLockedMonsterAttackModal(q, onComplete) {
+                const modal = document.getElementById('modal-monster-attack');
+                const fireball = document.getElementById('attack-modal-fireball');
+                const monsterEl = document.getElementById('attack-modal-monster');
+                const dmgPop = document.getElementById('attack-modal-damage-pop');
+                const rewardBanner = document.getElementById('attack-modal-reward-banner');
+
+                const score = this.soloState.score;
+                const info = this.getCurrentMonsterInfo(score);
+                const pct = Math.round((info.remainingHp / info.stageMaxHp) * 100);
+
+                document.getElementById('attack-modal-hero-emoji').textContent = this.selectedCharacter.emoji;
+                document.getElementById('attack-modal-hero-name').textContent = this.selectedCharacter.name;
+                fireball.textContent = this.selectedCharacter.projectile;
+
+                document.getElementById('attack-modal-eq').textContent = `${q.a} + ${q.b} = ${q.sum}`;
+                monsterEl.textContent = info.emoji;
+                document.getElementById('attack-modal-monster-name').textContent = info.name;
+                document.getElementById('attack-modal-hp-label').textContent = `怪獸血量：${info.remainingHp} / ${info.stageMaxHp} HP`;
+                document.getElementById('attack-modal-hp-bar').style.width = `${pct}%`;
+
+                if (score === info.targetQs || [10, 30, 50].includes(score)) {
+                    rewardBanner.classList.remove('hidden');
+                    rewardBanner.textContent = `🏆 恭喜完成 ${score} 題！成功擊敗 ${info.name}！`;
+                } else {
+                    rewardBanner.classList.add('hidden');
+                }
+
+                modal.classList.remove('hidden');
+                dmgPop.classList.add('hidden');
+                monsterEl.classList.remove('monster-hit');
+                fireball.style.transform = 'translateX(-80px) scale(0.9)';
+
+                setTimeout(() => { fireball.style.transform = 'translateX(95px) scale(1.35)'; }, 60);
+                setTimeout(() => { dmgPop.classList.remove('hidden'); monsterEl.classList.add('monster-hit'); }, 480);
+                setTimeout(() => { modal.classList.add('hidden'); if (onComplete) onComplete(); }, 1650);
+            }
+
+            openHintModal(q) {
+                this.currentHintQ = q;
+                document.getElementById('hint-modal-eq').textContent = `${q.a} + ${q.b} = ${q.sum}`;
+                document.getElementById('hint-label-a').textContent = `第 1 個數 (${q.a}個${q.item.name})：`;
+                document.getElementById('hint-label-b').textContent = `+ 第 2 個數 (${q.b}個${q.item.name})：`;
+                document.getElementById('hint-total-num').textContent = q.sum;
+
+                let htmlA = '';
+                for (let i = 1; i <= q.a; i++) {
+                    htmlA += `<div onclick="soundFX.speakNumber(${i})" class="w-14 h-14 rounded-full bg-white border-4 border-pink-500 flex flex-col items-center justify-center shadow cursor-pointer"><span class="text-xl">${q.item.emoji}</span><span class="text-xs font-black text-pink-700">${i}</span></div>`;
+                }
+                let htmlB = '';
+                for (let i = 1; i <= q.b; i++) {
+                    const num = q.a + i;
+                    htmlB += `<div onclick="soundFX.speakNumber(${num})" class="w-14 h-14 rounded-full bg-white border-4 border-sky-500 flex flex-col items-center justify-center shadow cursor-pointer"><span class="text-xl">${q.item.emoji}</span><span class="text-xs font-black text-sky-700">${num}</span></div>`;
+                }
+                document.getElementById('hint-items-a').innerHTML = htmlA;
+                document.getElementById('hint-items-b').innerHTML = htmlB;
+                document.getElementById('modal-hint').classList.remove('hidden');
+            }
+
+            speakHintModal() {
+                const q = this.currentHintQ;
+                if (!q) return;
+                soundFX.speakCantoneseText(`所以 ${soundFX.numberToCantonese(q.a)} 加 ${soundFX.numberToCantonese(q.b)} 等於 ${soundFX.numberToCantonese(q.sum)}！`);
+            }
+
+            closeHintModal() {
+                soundFX.playPop();
+                document.getElementById('modal-hint').classList.add('hidden');
+            }
+
+            recordMistake(a, b, wrongAns, item, source) {
+                const existing = this.mistakeBank.find(m => m.a === a && m.b === b);
+                if (existing) { existing.count += 1; existing.lastWrong = wrongAns; }
+                else { this.mistakeBank.push({ a, b, sum: a + b, lastWrong: wrongAns, count: 1, item, source }); }
+                this.updateMistakeBadges();
+            }
+
+            removeMistakeByEquation(a, b) {
+                this.mistakeBank = this.mistakeBank.filter(m => !(m.a === a && m.b === b));
+                this.updateMistakeBadges();
+            }
+
+            updateMistakeBadges() {
+                const cnt = this.mistakeBank.length;
+                document.getElementById('nav-mistake-badge').textContent = cnt;
+                document.getElementById('home-mistake-count').textContent = cnt;
+                document.getElementById('modal-mistake-total-badge').textContent = `${cnt} 題`;
+            }
+
+            openMistakeBankModal() {
+                soundFX.playPop();
+                this.renderMistakeBankList();
+                document.getElementById('modal-mistake-bank').classList.remove('hidden');
+            }
+
+            closeMistakeBankModal() {
+                soundFX.playPop();
+                document.getElementById('modal-mistake-bank').classList.add('hidden');
+            }
+
+            seedDemoMistakes() {
+                soundFX.playPop();
+                this.recordMistake(3, 4, 6, this.itemsCatalog[0], '示範錯題');
+                this.recordMistake(5, 3, 9, this.itemsCatalog[1], '示範錯題');
+                this.renderMistakeBankList();
+            }
+
+            clearMistakeBank() {
+                soundFX.playPop();
+                this.mistakeBank = [];
+                this.updateMistakeBadges();
+                this.renderMistakeBankList();
+            }
+
+            renderMistakeBankList() {
+                this.updateMistakeBadges();
+                const listEl = document.getElementById('mistake-bank-list');
+                if (!listEl) return;
+                if (this.mistakeBank.length === 0) {
+                    listEl.innerHTML = `<div class="text-center py-10 bg-emerald-50 rounded-3xl border-2 border-emerald-200"><div class="text-5xl mb-2">🌟</div><div class="text-xl font-black text-emerald-800">目前錯題庫是空的！</div></div>`;
+                    return;
+                }
+                listEl.innerHTML = this.mistakeBank.map((m) => `
+                    <div class="bg-rose-50/70 border-2 border-rose-300 rounded-2xl p-4 flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl">${m.item.emoji}</span>
+                            <div>
+                                <div class="text-2xl font-black text-slate-800">${m.a} + ${m.b} = <span class="text-emerald-600">${m.sum}</span></div>
+                                <div class="text-xs font-bold text-rose-600">曾誤選：${m.lastWrong}</div>
+                            </div>
+                        </div>
+                        <button type="button" onclick="if(window.app){window.app.removeMistakeByEquation(${m.a}, ${m.b}); window.app.renderMistakeBankList();}" class="btn-cute-sm bg-white text-slate-600 font-black px-3 py-1.5 rounded-xl text-sm cursor-pointer">移除</button>
+                    </div>
+                `).join('');
+            }
+
+            startMistakeDrillFromModal() {
+                if (this.mistakeBank.length === 0) this.seedDemoMistakes();
+                this.closeMistakeBankModal();
+                this.startSoloMode(true);
+            }
+
+            openSoloReportModal() {
+                soundFX.playPop();
+                const st = this.soloState;
+                const total = st.history.length;
+                const correctCount = st.history.filter(h => h.correct).length;
+                const wrongList = st.history.filter(h => !h.correct);
+
+                document.getElementById('report-modal-body').innerHTML = `
+                    <div class="grid grid-cols-3 gap-3 text-center">
+                        <div class="bg-pink-50 p-4 rounded-2xl border-2 border-pink-200"><div class="text-sm font-bold">總作答</div><div class="text-3xl font-black text-pink-600">${total}</div></div>
+                        <div class="bg-emerald-50 p-4 rounded-2xl border-2 border-emerald-200"><div class="text-sm font-bold">答對</div><div class="text-3xl font-black text-emerald-600">${correctCount}</div></div>
+                        <div class="bg-rose-50 p-4 rounded-2xl border-2 border-rose-200"><div class="text-sm font-bold">答錯</div><div class="text-3xl font-black text-rose-600">${wrongList.length}</div></div>
+                    </div>
+                `;
+                document.getElementById('modal-report').classList.remove('hidden');
+            }
+
+            closeReportModal() {
+                soundFX.playPop();
+                document.getElementById('modal-report').classList.add('hidden');
+            }
+
+            startBattleMode(playerCount) {
+                soundFX.playPop();
+                this.battleState.playerCount = playerCount;
+                this.battleState.timeLeft = 60;
+                this.battleState.players = [];
+
+                document.getElementById('battle-mode-title').textContent = `${playerCount}人同屏對戰`;
+                const grid = document.getElementById('battle-players-grid');
+                grid.className = playerCount === 4 ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3' : 'grid grid-cols-1 md:grid-cols-2 gap-4';
+
+                const colors = [
+                    { border: 'border-pink-400', bg: 'bg-pink-50', title: '🍓 1號小勇者' },
+                    { border: 'border-sky-400', bg: 'bg-sky-50', title: '🐳 2號小勇者' },
+                    { border: 'border-amber-400', bg: 'bg-amber-50', title: '🐥 3號小勇者' },
+                    { border: 'border-emerald-400', bg: 'bg-emerald-50', title: '🐸 4號小勇者' }
+                ];
+
+                grid.innerHTML = Array.from({ length: playerCount }, (_, idx) => {
+                    const c = colors[idx];
+                    return `
+                        <div class="bg-white rounded-3xl p-3.5 border-4 ${c.border} shadow-lg flex flex-col justify-between space-y-2.5">
+                            <div class="flex items-center justify-between ${c.bg} px-3 py-1.5 rounded-2xl">
+                                <span class="font-black text-base sm:text-xl">${c.title}</span>
+                                <span id="bp-score-${idx}" class="bg-amber-400 text-slate-900 font-black px-3 py-0.5 rounded-full text-sm">0 分</span>
+                            </div>
+                            <div id="bp-eq-${idx}" class="text-center font-black text-3xl text-slate-800 py-1 bg-slate-50 rounded-2xl border">2 + 3 = ?</div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="h-28 bg-white rounded-2xl border-2 border-pink-300 canvas-grid relative"><canvas id="bp-canvas-a-${idx}" class="w-full h-full block"></canvas></div>
+                                <div class="h-28 bg-white rounded-2xl border-2 border-sky-300 canvas-grid relative"><canvas id="bp-canvas-b-${idx}" class="w-full h-full block"></canvas></div>
+                            </div>
+                            <div id="bp-ans-area-${idx}" class="grid grid-cols-3 gap-2"></div>
+                        </div>
+                    `;
+                }).join('');
+
+                this.showScreen('battle');
+                for (let idx = 0; idx < playerCount; idx++) {
+                    const pObj = { idx, score: 0, qCount: 1, currentQ: this.generateQuestion(), canvases: { a: null, b: null } };
+                    this.battleState.players.push(pObj);
+                    pObj.canvases.a = new CircleCanvasController(document.getElementById(`bp-canvas-a-${idx}`), '#EC4899');
+                    pObj.canvases.b = new CircleCanvasController(document.getElementById(`bp-canvas-b-${idx}`), '#0284C7');
+                    this.loadNextBattlePlayerQuestion(idx);
+                }
+
+                if (this.battleState.timerId) clearInterval(this.battleState.timerId);
+                this.updateBattleTimerUI();
+                this.battleState.timerId = setInterval(() => {
+                    this.battleState.timeLeft -= 1;
+                    this.updateBattleTimerUI();
+                    if (this.battleState.timeLeft <= 0) this.endBattleGame();
+                }, 1000);
+            }
+
+            updateBattleTimerUI() {
+                const t = Math.max(0, this.battleState.timeLeft);
+                document.getElementById('battle-timer-display').textContent = `${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`;
+            }
+
+            loadNextBattlePlayerQuestion(pIdx) {
+                const p = this.battleState.players[pIdx];
+                if (!p) return;
+                p.currentQ = this.generateQuestion();
+                document.getElementById(`bp-score-${pIdx}`).textContent = `${p.score} 分 (第${p.qCount}題)`;
+                document.getElementById(`bp-eq-${pIdx}`).textContent = `${p.currentQ.a} + ${p.currentQ.b} = ?`;
+                document.getElementById(`bp-ans-area-${pIdx}`).innerHTML = p.currentQ.choices.map(val => `
+                    <button type="button" onclick="if(window.app)window.app.submitBattleAnswer(${pIdx}, ${val})" class="btn-cute-sm bg-emerald-500 text-white font-black text-xl py-2 rounded-xl cursor-pointer">${val}</button>
+                `).join('');
+            }
+
+            submitBattleAnswer(pIdx, val) {
+                const p = this.battleState.players[pIdx];
+                if (!p || !p.currentQ) return;
+                if (val === p.currentQ.sum) {
+                    soundFX.playFireballAttack();
+                    p.score += 1;
+                    p.qCount += 1;
+                    this.loadNextBattlePlayerQuestion(pIdx);
+                } else {
+                    soundFX.playWrong();
+                }
+            }
+
+            endBattleGame() {
+                if (this.battleState.timerId) { clearInterval(this.battleState.timerId); this.battleState.timerId = null; }
+                const sorted = [...this.battleState.players].sort((a,b) => b.score - a.score);
+                document.getElementById('report-modal-body').innerHTML = sorted.map((p, rank) => `
+                    <div class="p-4 rounded-2xl border-2 bg-amber-50 border-amber-400 flex justify-between font-black text-xl">
+                        <span>${rank === 0 ? '👑 冠軍' : `第 ${rank + 1} 名`}：${p.idx + 1}號勇者</span>
+                        <span class="text-emerald-600">${p.score} 分</span>
+                    </div>
+                `).join('');
+                document.getElementById('modal-report').classList.remove('hidden');
+            }
+
+            openWorksheetGenerator() {
+                soundFX.playPop();
+                this.showScreen('worksheet');
+                this.setWorksheetType('basic_grid');
+            }
+
+            setWorksheetType(type) {
+                soundFX.playPop();
+                this.worksheetState.type = type;
+                this.regenerateWorksheet();
+            }
+
+            toggleWorksheetAnswers() {
+                soundFX.playPop();
+                this.worksheetState.showAnswers = !this.worksheetState.showAnswers;
+                this.renderWorksheetQuestions();
+            }
+
+            regenerateWorksheet() {
+                const list = [];
+                for (let i = 0; i < 6; i++) {
+                    list.push(this.generateQuestion());
+                }
+                this.worksheetState.questions = list;
+                this.renderWorksheetQuestions();
+            }
+
+            renderWorksheetQuestions() {
+                const showAns = this.worksheetState.showAnswers;
+                const container = document.getElementById('ws-questions-container');
+                if (!container) return;
+
+                container.innerHTML = this.worksheetState.questions.map((q, idx) => `
+                    <div class="border-2 border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+                        <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                            <span class="font-black text-base text-slate-600">第 ${idx + 1} 題</span>
+                            <div class="text-3xl font-black text-slate-900">${q.a} + ${q.b} = <span class="inline-block w-14 text-center border-b-2 border-slate-800 ${showAns ? 'text-rose-600' : 'text-transparent'}">${q.sum}</span></div>
+                        </div>
+                        <div class="my-3 h-32 border-2 border-dashed border-slate-400 rounded-2xl p-3 flex flex-col justify-between bg-white relative">
+                            <div class="text-xs font-bold text-slate-400">請在此大格仔內畫出算式數量（${q.a} + ${q.b}）：</div>
+                        </div>
+                        <div class="flex items-center justify-between pt-1">
+                            <span class="text-xs font-bold text-slate-500">圈出正確答案：</span>
+                            <div class="flex items-center gap-2.5">
+                                ${q.choices.map(c => `<span class="w-10 h-10 rounded-full border-2 ${showAns && c === q.sum ? 'border-rose-600 bg-rose-50 text-rose-700' : 'border-slate-400 text-slate-800'} font-black text-xl flex items-center justify-center">${c}</span>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            showFloatingFeedback(isSuccess, message) {
+                const toast = document.getElementById('floating-toast');
+                if (!toast) return;
+                toast.textContent = message;
+                toast.className = `fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl font-black text-xl text-white shadow-2xl border-2 border-white ${isSuccess ? 'bg-emerald-600' : 'bg-rose-600'}`;
+                toast.classList.remove('hidden');
+                setTimeout(() => toast.classList.add('hidden'), 2400);
+            }
+
+            selectCharacter(idx) {
+                soundFX.playPop();
+                this.selectedCharacter = this.characters[idx];
+                document.getElementById('selected-hero-label').textContent = this.selectedCharacter.name;
+                document.getElementById('nav-hero-icon').textContent = this.selectedCharacter.emoji;
+                this.characters.forEach((c, i) => {
+                    const btn = document.getElementById(`hero-btn-${i}`);
+                    if (btn) btn.className = i === idx ? 'btn-cute-sm p-3 rounded-2xl border-4 border-amber-500 bg-amber-50 flex flex-col items-center cursor-pointer' : 'btn-cute-sm p-3 rounded-2xl border-4 border-slate-200 bg-white flex flex-col items-center cursor-pointer';
+                });
+            }
+
+            selectMonsterTier(tierKey) {
+                soundFX.playPop();
+                this.monsterTier = tierKey;
+                const tier = this.monsterTiers[tierKey];
+                this.difficulty = tier.maxSum === 10 ? 10 : (tier.maxSum === 15 ? 15 : 20);
+                document.getElementById('home-banner-monster').textContent = tier.emoji;
+                if (this.currentScreen === 'solo') this.updateMonsterUI();
+            }
+
+            toggleBgm() {
+                soundFX.bgmEnabled = !soundFX.bgmEnabled;
+                const btn = document.getElementById('btn-toggle-bgm');
+                if (btn) btn.textContent = soundFX.bgmEnabled ? '🎵 魔法音樂: 開' : '🔇 魔法音樂: 關';
+                if (soundFX.bgmEnabled) soundFX.startHarryPotterBGM();
+                else soundFX.stopHarryPotterBGM();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            window.app = new AdditionAdventureApp();
+        });
+    </script>
+</body>
+</html>
